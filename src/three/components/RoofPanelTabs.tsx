@@ -5,34 +5,34 @@ import { roofPanelTabAtom } from "../../store/atoms";
 const tabBarStyle: React.CSSProperties = {
   display: "flex",
   borderBottom: "1px solid #313244",
-  background: "#181825",
+  background: "rgba(24, 24, 37, 0.97)",
   flexShrink: 0,
 };
 
 const tabBase: React.CSSProperties = {
   flex: 1,
-  padding: "10px 8px",
+  padding: "clamp(0.45rem, 0.9vh, 0.65rem) clamp(0.35rem, 0.6vw, 0.5rem)",
   display: "flex",
   alignItems: "center",
   justifyContent: "center",
-  gap: 6,
+  gap: "clamp(0.25rem, 0.45vw, 0.4rem)",
   background: "transparent",
   border: "none",
   cursor: "pointer",
   color: "#a6adc8",
-  fontSize: 12,
+  fontSize: "clamp(0.62rem, 0.7vw, 0.75rem)",
   fontWeight: 600,
   letterSpacing: 0.5,
   textTransform: "uppercase",
-  borderBottom: "2px solid transparent",
+  borderBottom: "0.125rem solid transparent",
   transition: "color 0.15s, border-color 0.15s, background 0.15s",
 };
 
 const tabActive: React.CSSProperties = {
   ...tabBase,
-  color: "#89b4fa",
-  borderBottomColor: "#89b4fa",
-  background: "#1e1e2e",
+  color: "#ffa500",
+  borderBottomColor: "#ffa500",
+  background: "rgba(40, 40, 50, 0.97)",
 };
 
 export function RoofPanelTabs() {
@@ -45,7 +45,7 @@ export function RoofPanelTabs() {
         style={tab === "roof" ? tabActive : tabBase}
         onClick={() => setTab("roof")}
       >
-        <Home size={14} strokeWidth={1.75} />
+        <Home size="clamp(0.85rem, 1vw, 1rem)" strokeWidth={1.75} />
         Roof
       </button>
       <button
@@ -53,7 +53,7 @@ export function RoofPanelTabs() {
         style={tab === "solar" ? tabActive : tabBase}
         onClick={() => setTab("solar")}
       >
-        <LayoutGrid size={14} strokeWidth={1.75} />
+        <LayoutGrid size="clamp(0.85rem, 1vw, 1rem)" strokeWidth={1.75} />
         Solar
       </button>
       <button
@@ -61,7 +61,7 @@ export function RoofPanelTabs() {
         style={tab === "chimney" ? tabActive : tabBase}
         onClick={() => setTab("chimney")}
       >
-        <Factory size={14} strokeWidth={1.75} />
+        <Factory size="clamp(0.85rem, 1vw, 1rem)" strokeWidth={1.75} />
         Chimney
       </button>
     </div>

@@ -48,65 +48,77 @@ const sidebarStyle: React.CSSProperties = {
   top: 0,
   left: 0,
   bottom: 0,
-  width: 72,
+  width: "clamp(4rem, 5vw, 4.5rem)",
   background: "rgba(40, 40, 50, 0.95)",
   backdropFilter: "blur(8px)",
   display: "flex",
   flexDirection: "column",
   zIndex: 200,
-  overflowY: "auto",
-  overflowX: "hidden",
-  borderRight: "1px solid rgba(255,255,255,0.08)",
+  overflow: "visible",
+  borderRight: "0.0625rem solid rgba(255,255,255,0.08)",
 };
 
 const sectionTitleStyle: React.CSSProperties = {
   color: "rgba(255,255,255,0.55)",
-  fontSize: 9,
+  fontSize: "clamp(0.5rem, 0.65vw, 0.6rem)",
   fontWeight: 700,
   textTransform: "uppercase",
-  letterSpacing: 1,
-  padding: "10px 0 4px",
+  letterSpacing: "0.06rem",
+  padding: "clamp(0.45rem, 1vh, 0.65rem) 0 clamp(0.15rem, 0.4vh, 0.3rem)",
   textAlign: "center",
   userSelect: "none",
 };
 
 const btnBase: React.CSSProperties = {
-  width: 56,
-  height: 48,
+  width: "calc(100% - clamp(0.5rem, 1vw, 0.75rem))",
+  height: "clamp(2.8rem, 6vh, 3.5rem)",
   display: "flex",
   flexDirection: "column",
   alignItems: "center",
   justifyContent: "center",
-  gap: 2,
-  borderRadius: 6,
+  gap: "clamp(0.1rem, 0.25vh, 0.2rem)",
+  borderRadius: "clamp(0.3rem, 0.5vw, 0.45rem)",
   border: "none",
   cursor: "pointer",
   transition: "background 0.15s, box-shadow 0.15s",
   background: "transparent",
   color: "#ccc",
-  fontSize: 18,
-  margin: "2px auto",
-  padding: "4px 0",
+  fontSize: "clamp(1rem, 1.8vw, 1.25rem)",
+  margin: "clamp(0.08rem, 0.25vh, 0.15rem) auto",
+  padding: "clamp(0.18rem, 0.45vh, 0.3rem) 0",
 };
 
 const btnActive: React.CSSProperties = {
   ...btnBase,
   background: "rgba(255,160,0,0.25)",
-  boxShadow: "0 0 0 2px rgba(255,160,0,0.6)",
+  boxShadow: "0 0 0 0.125rem rgba(255,160,0,0.6)",
+  color: "#ffa500",
+};
+
+const paletteBtnBase: React.CSSProperties = {
+  ...btnBase,
+  height: "clamp(2.1rem, 4.5vh, 2.65rem)",
+  padding: "clamp(0.14rem, 0.34vh, 0.225rem) 0",
+};
+
+const paletteBtnActive: React.CSSProperties = {
+  ...paletteBtnBase,
+  background: "rgba(255,160,0,0.25)",
+  boxShadow: "0 0 0 0.125rem rgba(255,160,0,0.6)",
   color: "#ffa500",
 };
 
 const btnLabelStyle: React.CSSProperties = {
-  fontSize: 8,
+  fontSize: "clamp(0.45rem, 0.6vw, 0.55rem)",
   fontWeight: 600,
   lineHeight: 1,
   textTransform: "uppercase",
-  letterSpacing: 0.5,
-  marginTop: 1,
+  letterSpacing: "0.03rem",
+  marginTop: "0.06rem",
 };
 
 
-const ICON_SIZE = 24;
+const ICON_SIZE = "clamp(1rem, 1.8vw, 1.5rem)";
 const ICON_STROKE = 1.5;
 
 const MiscIcons = {
@@ -153,12 +165,13 @@ export default function Sidebar() {
   const isPolygonTool =
     activeTool === "polygon" || activeTool === "polygon-lot";
   const isDrawTool =
-    mode === "draw" &&
-    (activeTool === "draw" ||
-      activeTool === "flat" ||
-      activeTool === "hip" ||
-      activeTool === "shed" ||
-      activeTool === "lot");
+    showDrawPalette ||
+    (mode === "draw" &&
+      (activeTool === "draw" ||
+        activeTool === "flat" ||
+        activeTool === "hip" ||
+        activeTool === "shed" ||
+        activeTool === "lot"));
 
   const handleSelect = useCallback(() => {
     setMode("select");
@@ -167,15 +180,17 @@ export default function Sidebar() {
   }, [setMode, setActiveTool]);
 
   const handleDraw = useCallback(() => {
-    setMode("draw");
-    setActiveTool("hip");
+    // Draw is a category/menu action. Do not enter drawing mode until
+    // the user explicitly chooses Roof, Lot, or Tree from the palette.
+    setMode("select");
+    setActiveTool("select");
     setShowDrawPalette(true);
   }, [setMode, setActiveTool]);
 
   const handleDrawPaletteTool = useCallback((tool: "hip" | "lot" | "tree") => {
     setMode("draw");
     setActiveTool(tool);
-    setShowDrawPalette(true);
+    setShowDrawPalette(false);
   }, [setMode, setActiveTool]);
 
 
@@ -205,13 +220,14 @@ export default function Sidebar() {
   }, [handleSelect, handleDraw]);
 
   const handlePolygonDraw = useCallback(() => {
+    setShowDrawPalette(false);
     setMode("draw");
     setActiveTool((prev) => {
       if (prev === "lot" || prev === "polygon-lot") return "polygon-lot";
       if (prev === "hip" || prev === "shed") return "draw";
       return "polygon";
     });
-  }, [setMode, setActiveTool]);
+  }, [setShowDrawPalette, setMode, setActiveTool]);
 
   const handleTreeMode = useCallback(() => {
     setActiveTool("tree");
@@ -234,7 +250,7 @@ export default function Sidebar() {
           display: "flex",
           flexDirection: "column",
           alignItems: "center",
-          paddingTop: 8,
+          paddingTop: "clamp(0.4rem, 1vh, 0.65rem)",
         }}
       >
         <button
@@ -293,31 +309,31 @@ export default function Sidebar() {
         </button>
       </div>
 
-      {showDrawPalette && mode === "draw" && (
+      {showDrawPalette && (
         <div
           role="dialog"
           aria-label="Draw tools"
           style={{
             position: "absolute",
-            left: "100%",
-            top: "18%",
+            left: "calc(100% + 0.25rem)",
+            top: "clamp(3.5rem, 10vh, 5rem)",
             width: "clamp(6rem, 11vw, 9rem)",
-            padding: "0.45rem",
+            padding: "clamp(0.3rem, 0.7vw, 0.4rem)",
             display: "flex",
             flexDirection: "column",
-            gap: "0.2rem",
+            gap: "clamp(0.12rem, 0.25vh, 0.18rem)",
             background: "rgba(40, 40, 50, 0.97)",
             backdropFilter: "blur(8px)",
-            border: "1px solid rgba(255,255,255,0.1)",
+            border: "0.0625rem solid rgba(255,255,255,0.1)",
             borderRadius: "0 0.45rem 0.45rem 0",
             boxShadow: "0 0.5rem 1.5rem rgba(0,0,0,0.28)",
             zIndex: 250,
           }}
         >
-          <div style={{ ...sectionTitleStyle, padding: "0.35rem 0.2rem" }}>Draw</div>
+          <div style={{ ...sectionTitleStyle, padding: "clamp(0.25rem, 0.5vh, 0.35rem) clamp(0.15rem, 0.4vw, 0.2rem)" }}>Draw</div>
           <button
             title="Draw Roof"
-            style={activeTool === "hip" ? btnActive : btnBase}
+            style={activeTool === "hip" ? paletteBtnActive : paletteBtnBase}
             onClick={() => handleDrawPaletteTool("hip")}
           >
             <Home size={ICON_SIZE} strokeWidth={ICON_STROKE} />
@@ -325,7 +341,7 @@ export default function Sidebar() {
           </button>
           <button
             title="Draw Lot"
-            style={activeTool === "lot" ? btnActive : btnBase}
+            style={activeTool === "lot" ? paletteBtnActive : paletteBtnBase}
             onClick={() => handleDrawPaletteTool("lot")}
           >
             <Grid2x2 size={ICON_SIZE} strokeWidth={ICON_STROKE} />
@@ -333,7 +349,7 @@ export default function Sidebar() {
           </button>
           <button
             title="Place Pine Tree"
-            style={activeTool === "tree" ? btnActive : btnBase}
+            style={activeTool === "tree" ? paletteBtnActive : paletteBtnBase}
             onClick={() => handleDrawPaletteTool("tree")}
           >
             <TreePine size={ICON_SIZE} strokeWidth={ICON_STROKE} />
@@ -350,10 +366,10 @@ export default function Sidebar() {
           display: "flex",
           flexDirection: "column",
           alignItems: "center",
-          paddingBottom: 10,
-          gap: 4,
-          borderTop: "1px solid rgba(255,255,255,0.08)",
-          paddingTop: 8,
+          paddingBottom: "clamp(0.5rem, 1.5vh, 0.75rem)",
+          gap: "clamp(0.15rem, 0.4vh, 0.3rem)",
+          borderTop: "0.0625rem solid rgba(255,255,255,0.08)",
+          paddingTop: "clamp(0.4rem, 1vh, 0.65rem)",
         }}
       >
         <div style={sectionTitleStyle}>Panels</div>

@@ -18,6 +18,7 @@ import {
 } from "../../store/atoms";
 import { solarPanelConfigsAtom } from "../store/solarPanelStore";
 import { Box, Button, Input, Span, VStack } from "@chakra-ui/react";
+
 import { RoofPanelTabs } from "./RoofPanelTabs";
 import { ChimneyPropertiesPanel } from "../../ui/components/panels/ChimneyPropertiesPanel";
 
@@ -50,16 +51,17 @@ function RoofTypeButton({
       flexDirection="column"
       alignItems="center"
       gap={1}
-      padding="10px 6px"
-      bg={isActive ? "#45475a" : "#313244"}
-      border={isActive ? "2px solid #89b4fa" : "1px solid #45475a"}
-      borderRadius={8}
-      color={isActive ? "#89b4fa" : "#cdd6f4"}
+      padding="clamp(0.35rem, 0.7vh, 0.55rem) clamp(0.3rem, 0.6vw, 0.5rem)"
+      minH="clamp(3rem, 6vh, 3.8rem)"
+      bg={isActive ? "rgba(255,160,0,0.16)" : "#313244"}
+      border={isActive ? "0.125rem solid #ffa500" : "0.0625rem solid #45475a"}
+      borderRadius="clamp(0.35rem, 0.55vw, 0.5rem)"
+      color={isActive ? "#ffa500" : "#cdd6f4"}
       cursor="pointer"
       transition="all 0.15s ease"
-      fontSize={12}
+      fontSize="clamp(0.7rem, 0.75vw, 0.8rem)"
     >
-      <Span fontSize={22}>{icons[id]}</Span>
+      <Span fontSize="clamp(1.15rem, 1.5vw, 1.45rem)">{icons[id]}</Span>
       <Span fontWeight={isActive ? 600 : 400}>{name}</Span>
     </Button>
   );
@@ -118,36 +120,66 @@ function alignShedToWorldDir(
 function SectionTitle({
   children,
   color = "#a6adc8",
+  expanded,
+  onToggle,
 }: {
   children: React.ReactNode;
   color?: string;
+  expanded: boolean;
+  onToggle: () => void;
 }) {
   return (
-    <Box
-      fontSize={11}
-      fontWeight={600}
-      textTransform="uppercase"
-      letterSpacing={1}
-      color={color}
-      marginBottom={8}
+    <button
+      type="button"
+      onClick={onToggle}
+      aria-expanded={expanded}
+      style={{
+        width: "100%",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "space-between",
+        padding: "clamp(0.35rem, 0.7vh, 0.5rem) 0",
+        border: 0,
+        borderBottom: "0.0625rem solid rgba(255,255,255,0.07)",
+        background: "transparent",
+        color,
+        fontSize: "clamp(0.62rem, 0.7vw, 0.72rem)",
+        fontWeight: 700,
+        textTransform: "uppercase",
+        letterSpacing: "0.06rem",
+        cursor: "pointer",
+        textAlign: "left",
+      }}
     >
-      {children}
-    </Box>
+      <span>{children}</span>
+      <span
+        aria-hidden="true"
+        style={{
+          fontSize: "clamp(1rem, 1.25vw, 1.2rem)",
+          lineHeight: 1,
+          fontWeight: 400,
+          color: expanded ? "#ffa500" : "rgba(255,255,255,0.65)",
+          flexShrink: 0,
+        }}
+      >
+        {expanded ? "−" : "+"}
+      </span>
+    </button>
   );
 }
 
 const dimensionSliderStyle: React.CSSProperties = {
   width: "100%",
-  height: 6,
+  height: "clamp(0.25rem, 0.45vh, 0.375rem)",
   accentColor: "#89b4fa",
   cursor: "pointer",
 };
 
 const dimensionNumberInputStyle: React.CSSProperties = {
-  width: 74,
+  width: "clamp(3.6rem, 5.2vw, 4.6rem)",
   alignSelf: "flex-end",
   textAlign: "right",
-  padding: "6px 10px",
+  padding: "clamp(0.3rem, 0.6vh, 0.45rem) clamp(0.45rem, 0.7vw, 0.65rem)",
   background: "#313244",
   border: "1px solid #45475a",
   borderRadius: 6,
@@ -167,7 +199,18 @@ export function RoofPropertiesPanel() {
   const setSelectedChimneyId = useSetAtom(selectedChimneyIdAtom);
   const metersPerUnit = useAtomValue(metersPerUnitAtom);
   const [collapsedId] = useState<string | null>(null);
+  const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({
+    roofType: true,
+    dimensions: false,
+    color: false,
+    roofSlope: false,
+    chimney: false,
+  });
   const [activePanel, setActivePanel] = useAtom(activePanelAtom);
+
+  const toggleSection = useCallback((id: string) => {
+    setExpandedSections((prev) => ({ ...prev, [id]: !prev[id] }));
+  }, []);
   const roofPanelTab = useAtomValue(roofPanelTabAtom);
   const isDraggingHandle = useAtomValue(isDraggingHandleAtom);
 
@@ -306,26 +349,26 @@ export function RoofPropertiesPanel() {
   return (
     <Box
       position="absolute"
-      left="72px"
+      left="clamp(4rem, 5vw, 4.5rem)"
       top={0}
-      width={collapsed ? "50px" : "300px"}
+      width={collapsed ? "clamp(2.8rem, 3vw, 3.4rem)" : "clamp(15rem, 17vw, 18rem)"}
       height="100%"
-      bg="#1e1e2e"
+      bg="rgba(40, 40, 50, 0.97)"
       color="#cdd6f4"
-      borderRight="1px solid #313244"
+      borderRight="0.0625rem solid rgba(255,255,255,0.08)"
       display="flex"
       flexDirection="column"
       fontFamily='-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
-      fontSize={13}
+      fontSize="clamp(0.72rem, 0.75vw, 0.82rem)"
       zIndex={200}
       overflow="hidden"
       transition="width 0.2s ease"
     >
       {}
       <Box
-        padding="16px 20px"
-        borderBottom="1px solid #313244"
-        fontSize={15}
+        padding="clamp(0.65rem, 1.1vw, 0.9rem) clamp(0.75rem, 1.15vw, 1rem)"
+        borderBottom="0.0625rem solid rgba(255,255,255,0.08)"
+        fontSize="clamp(0.85rem, 1vw, 1rem)"
         fontWeight={600}
         letterSpacing={0.3}
         display="flex"
@@ -354,15 +397,16 @@ export function RoofPropertiesPanel() {
       <Box
         flex={1}
         overflowY="auto"
-        padding="16px 20px"
+        padding="clamp(0.65rem, 1vw, 0.9rem) clamp(0.75rem, 1.15vw, 1rem)"
         display={collapsed ? "none" : "flex"}
         flexDirection="column"
-        gap={20}
+        gap="clamp(0.45rem, 0.9vh, 0.7rem)"
       >
         {}
         <Box>
-          <SectionTitle>Roof Type</SectionTitle>
-          <Box display="grid" gridTemplateColumns="1fr 1fr" gap={2}>
+          <SectionTitle expanded={expandedSections.roofType} onToggle={() => toggleSection("roofType")}>Roof Type</SectionTitle>
+          {expandedSections.roofType && (
+          <Box display="grid" gridTemplateColumns="1fr 1fr" gap="clamp(0.35rem, 0.65vh, 0.55rem)">
             {ROOF_TYPE_OPTIONS.map((opt) => (
               <RoofTypeButton
                 key={opt.id}
@@ -382,15 +426,17 @@ export function RoofPropertiesPanel() {
                 }}
               />
             ))}
-          </Box>
+          </Box>          )}
+
         </Box>
 
         {}
         <Box>
-          <SectionTitle>Dimensions</SectionTitle>
-
+          <SectionTitle expanded={expandedSections.dimensions} onToggle={() => toggleSection("dimensions")}>Dimensions</SectionTitle>
+          {expandedSections.dimensions && (
+          <>
           {/* Wall Height */}
-          <VStack align="stretch" gap={2}>
+          <VStack align="stretch" gap="clamp(0.35rem, 0.65vh, 0.55rem)">
             <Box
               display="flex"
               alignItems="center"
@@ -401,7 +447,7 @@ export function RoofPropertiesPanel() {
                 {toMeters(selectedRect.wallHeight).toFixed(2)} m
               </Span>
             </Box>
-            <VStack align="stretch" gap={2}>
+            <VStack align="stretch" gap="clamp(0.35rem, 0.65vh, 0.55rem)">
               <input
                 type="range"
                 min={0.5}
@@ -430,7 +476,7 @@ export function RoofPropertiesPanel() {
           {}
           {selectedRect.roofType !== "flat" && (
             <>
-              <VStack align="stretch" gap={2} mt={14}>
+              <VStack align="stretch" gap="clamp(0.35rem, 0.65vh, 0.55rem)" mt="clamp(0.7rem, 1.5vh, 1rem)">
                 <Box
                   display="flex"
                   alignItems="center"
@@ -441,7 +487,7 @@ export function RoofPropertiesPanel() {
                     {toMeters(selectedRect.pitchAngle).toFixed(2)} m
                   </Span>
                 </Box>
-                <VStack align="stretch" gap={2}>
+                <VStack align="stretch" gap="clamp(0.35rem, 0.65vh, 0.55rem)">
                   <input
                     type="range"
                     min={0.5}
@@ -470,7 +516,7 @@ export function RoofPropertiesPanel() {
           )}
 
           {/* Depth (width of the roof) */}
-          <VStack align="stretch" gap={2} mt={14}>
+          <VStack align="stretch" gap="clamp(0.35rem, 0.65vh, 0.55rem)" mt="clamp(0.7rem, 1.5vh, 1rem)">
             <Box
               display="flex"
               alignItems="center"
@@ -481,7 +527,7 @@ export function RoofPropertiesPanel() {
                 {toMeters(selectedRect.depth).toFixed(2)} m
               </Span>
             </Box>
-            <VStack align="stretch" gap={2}>
+            <VStack align="stretch" gap="clamp(0.35rem, 0.65vh, 0.55rem)">
               <input
                 type="range"
                 min={1}
@@ -506,16 +552,21 @@ export function RoofPropertiesPanel() {
               />
             </VStack>
           </VStack>
+          </>
+          )}
+
         </Box>
 
         {/* ------- Color ------- */}
         <Box>
-          <SectionTitle>Color</SectionTitle>
+          <SectionTitle expanded={expandedSections.color} onToggle={() => toggleSection("color")}>Color</SectionTitle>
+          {expandedSections.color && (
+          <>
           <Box
             display="grid"
             gridTemplateColumns="repeat(6, 1fr)"
-            gap={6}
-            mb={10}
+            gap="clamp(0.25rem, 0.5vw, 0.4rem)"
+            mb="clamp(0.45rem, 0.8vh, 0.65rem)"
           >
             {PRESET_COLORS.map((c) => (
               <Button
@@ -529,7 +580,7 @@ export function RoofPropertiesPanel() {
                     ? "2px solid #89b4fa"
                     : "1px solid #45475a"
                 }
-                borderRadius={6}
+                borderRadius="clamp(0.3rem, 0.5vw, 0.45rem)"
                 cursor="pointer"
                 minW={0}
                 padding={0}
@@ -541,12 +592,15 @@ export function RoofPropertiesPanel() {
             value={selectedRect.color}
             onChange={(e) => updateRect({ color: e.target.value })}
             width="100%"
-            height={32}
+            height="clamp(1.7rem, 3.5vh, 2rem)"
             border="none"
-            borderRadius={6}
+            borderRadius="clamp(0.3rem, 0.5vw, 0.45rem)"
             cursor="pointer"
             bg="transparent"
           />
+          </>
+          )}
+
         </Box>
 
         {/* ------- End Caps ------- */}
@@ -558,7 +612,8 @@ export function RoofPropertiesPanel() {
         {/* ------- Shed direction toggle ------- */}
         {selectedRect.roofType === "shed" && (
           <Box>
-            <SectionTitle>Roof Slope</SectionTitle>
+            <SectionTitle expanded={expandedSections.roofSlope} onToggle={() => toggleSection("roofSlope")}>Roof Slope</SectionTitle>
+          {expandedSections.roofSlope && (
             <Button
               onClick={() => {
 
@@ -611,13 +666,13 @@ export function RoofPropertiesPanel() {
                 });
               }}
               width="full"
-              padding="10px"
+              padding="clamp(0.4rem, 0.8vh, 0.6rem)"
               bg="#313244"
               border="1px solid #89b4fa"
-              borderRadius={8}
+              borderRadius="clamp(0.35rem, 0.55vw, 0.5rem)"
               color="#cdd6f4"
               cursor="pointer"
-              fontSize={13}
+              fontSize="clamp(0.72rem, 0.75vw, 0.82rem)"
               display="flex"
               alignItems="center"
               justifyContent="center"
@@ -627,31 +682,34 @@ export function RoofPropertiesPanel() {
               {(selectedRect.shedDirection ?? "left") === "left"
                 ? "(high side: left)"
                 : "(high side: right)"}
-            </Button>
+            </Button>          )}
+
           </Box>
         )}
 
         {}
         <Box>
-          <SectionTitle>Chimney / Obstacle</SectionTitle>
+          <SectionTitle expanded={expandedSections.chimney} onToggle={() => toggleSection("chimney")}>Chimney / Obstacle</SectionTitle>
+          {expandedSections.chimney && (
           <Button
             onClick={addChimney}
             width="full"
-            padding="10px"
+            padding="clamp(0.4rem, 0.8vh, 0.6rem)"
             bg="#313244"
             border="1px solid #fab387"
-            borderRadius={8}
+            borderRadius="clamp(0.35rem, 0.55vw, 0.5rem)"
             color="#fab387"
             fontWeight={600}
             cursor="pointer"
-            fontSize={13}
+            fontSize="clamp(0.72rem, 0.75vw, 0.82rem)"
             display="flex"
             alignItems="center"
             justifyContent="center"
             gap={2}
           >
             🏠 Add Chimney
-          </Button>
+          </Button>          )}
+
         </Box>
 
         {/* ------- Delete ------- */}
@@ -659,14 +717,14 @@ export function RoofPropertiesPanel() {
           <Button
             onClick={deleteRect}
             width="full"
-            padding="10px"
+            padding="clamp(0.4rem, 0.8vh, 0.6rem)"
             bg="#45475a"
             border="1px solid #f38ba8"
-            borderRadius={8}
+            borderRadius="clamp(0.35rem, 0.55vw, 0.5rem)"
             color="#f38ba8"
             fontWeight={600}
             cursor="pointer"
-            fontSize={13}
+            fontSize="clamp(0.72rem, 0.75vw, 0.82rem)"
           >
             Delete Roof
           </Button>
