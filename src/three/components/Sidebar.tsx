@@ -1,5 +1,5 @@
 import { useAtom, useAtomValue, useSetAtom } from "jotai";
-import { useCallback, useEffect } from "react";
+import { useCallback, useEffect, useState } from "react";
 import {
   interactionModeAtom,
   activeToolAtom,
@@ -10,7 +10,6 @@ import {
   FileText,
   Grid2x2,
   Home,
-  Move,
   MousePointer2,
   Pencil,
   Redo2,
@@ -136,7 +135,6 @@ const MiscIcons = {
     </svg>
   ),
   lot: <Grid2x2 size={ICON_SIZE} strokeWidth={ICON_STROKE} />,
-  pan: <Move size={ICON_SIZE} strokeWidth={ICON_STROKE} />,
 };
 
 
@@ -144,6 +142,7 @@ export default function Sidebar() {
   const [mode, setMode] = useAtom(interactionModeAtom);
   const [activeTool, setActiveTool] = useAtom(activeToolAtom);
   const [activePanel, setActivePanel] = useAtom(activePanelAtom);
+  const [showDrawPalette, setShowDrawPalette] = useState(false);
   const canUndo = useAtomValue(canUndoAtom);
   const canRedo = useAtomValue(canRedoAtom);
   const undo = useSetAtom(undoAtom);
@@ -164,11 +163,19 @@ export default function Sidebar() {
   const handleSelect = useCallback(() => {
     setMode("select");
     setActiveTool("select");
+    setShowDrawPalette(false);
   }, [setMode, setActiveTool]);
 
   const handleDraw = useCallback(() => {
     setMode("draw");
     setActiveTool("hip");
+    setShowDrawPalette(true);
+  }, [setMode, setActiveTool]);
+
+  const handleDrawPaletteTool = useCallback((tool: "hip" | "lot" | "tree") => {
+    setMode("draw");
+    setActiveTool(tool);
+    setShowDrawPalette(true);
   }, [setMode, setActiveTool]);
 
 
@@ -219,37 +226,6 @@ export default function Sidebar() {
     setMode("draw");
   }, [setMode, setActiveTool]);
 
-  const sections: ToolSection[] = [
-    {
-      title: "Build",
-      items: [
-        {
-          id: "roof",
-          icon: <Home size={ICON_SIZE} strokeWidth={ICON_STROKE} />,
-          label: "Roof",
-          action: () => {
-            setMode("select");
-            setActiveTool("select");
-            setActivePanel("roof");
-            // Roof types now live inside Roof Properties.
-          },
-        },
-        {
-          id: "lot",
-          icon: MiscIcons.lot,
-          label: "Lot",
-          action: handleLotMode,
-        },
-        {
-          id: "tree",
-          icon: MiscIcons.tree,
-          label: "Tree",
-          action: handleTreeMode,
-        },
-      ],
-    },
-  ];
-
   return (
     <div style={sidebarStyle}>
       {}
@@ -290,17 +266,6 @@ export default function Sidebar() {
         </button>
 
         <button
-          title="Pan"
-          style={activeTool === "pan" ? btnActive : btnBase}
-          onClick={() => {
-            setActiveTool("pan");
-          }}
-        >
-          {MiscIcons.pan}
-          <span style={btnLabelStyle}>Pan</span>
-        </button>
-
-        <button
           title="Undo (Ctrl/Cmd+Z)"
           disabled={!canUndo}
           style={
@@ -328,56 +293,55 @@ export default function Sidebar() {
         </button>
       </div>
 
-      {/* Sections */}
-      {sections.map((section) => (
-        <div key={section.title}>
-          <div style={sectionTitleStyle}>{section.title}</div>
-          <div
-            style={{
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
-            }}
+      {showDrawPalette && mode === "draw" && (
+        <div
+          role="dialog"
+          aria-label="Draw tools"
+          style={{
+            position: "absolute",
+            left: "100%",
+            top: "18%",
+            width: "clamp(6rem, 11vw, 9rem)",
+            padding: "0.45rem",
+            display: "flex",
+            flexDirection: "column",
+            gap: "0.2rem",
+            background: "rgba(40, 40, 50, 0.97)",
+            backdropFilter: "blur(8px)",
+            border: "1px solid rgba(255,255,255,0.1)",
+            borderRadius: "0 0.45rem 0.45rem 0",
+            boxShadow: "0 0.5rem 1.5rem rgba(0,0,0,0.28)",
+            zIndex: 250,
+          }}
+        >
+          <div style={{ ...sectionTitleStyle, padding: "0.35rem 0.2rem" }}>Draw</div>
+          <button
+            title="Draw Roof"
+            style={activeTool === "hip" ? btnActive : btnBase}
+            onClick={() => handleDrawPaletteTool("hip")}
           >
-            {section.items.map((item) => {
-              const isActive =
-                activeTool === item.id ||
-                (item.id === "lot" && activeTool === "polygon-lot") ||
-                (item.id === "roof" && activePanel === "roof");
-              const baseStyle = item.danger
-                ? {
-                    ...btnBase,
-                    color: "#ff6b6b",
-                  }
-                : btnBase;
-              const activeStyle = item.danger
-                ? {
-                    ...btnActive,
-                    background: "rgba(244, 67, 54, 0.2)",
-                    boxShadow: "0 0 0 2px rgba(244, 67, 54, 0.6)",
-                    color: "#ff6b6b",
-                  }
-                : btnActive;
-              return (
-                <button
-                  key={item.id}
-                  title={item.label}
-                  style={isActive ? activeStyle : baseStyle}
-                  onClick={() => {
-                    if (item.id !== "roof") setActiveTool(item.id);
-                    item.action?.();
-                  }}
-                >
-                  {item.icon}
-                  <span style={btnLabelStyle}>{item.label}</span>
-                </button>
-              );
-            })}
-          </div>
+            <Home size={ICON_SIZE} strokeWidth={ICON_STROKE} />
+            <span style={btnLabelStyle}>Roof</span>
+          </button>
+          <button
+            title="Draw Lot"
+            style={activeTool === "lot" ? btnActive : btnBase}
+            onClick={() => handleDrawPaletteTool("lot")}
+          >
+            <Grid2x2 size={ICON_SIZE} strokeWidth={ICON_STROKE} />
+            <span style={btnLabelStyle}>Lot</span>
+          </button>
+          <button
+            title="Place Pine Tree"
+            style={activeTool === "tree" ? btnActive : btnBase}
+            onClick={() => handleDrawPaletteTool("tree")}
+          >
+            <TreePine size={ICON_SIZE} strokeWidth={ICON_STROKE} />
+            <span style={btnLabelStyle}>Tree</span>
+          </button>
         </div>
-      ))}
+      )}
 
-      {}
       <div style={{ flex: 1 }} />
 
       {}
@@ -402,16 +366,6 @@ export default function Sidebar() {
         >
           <Sun size={ICON_SIZE} strokeWidth={ICON_STROKE} />
           <span style={btnLabelStyle}>Sun</span>
-        </button>
-        <button
-          title="Tree Properties"
-          style={activePanel === "tree" ? btnActive : btnBase}
-          onClick={() =>
-            setActivePanel((prev) => (prev === "tree" ? null : "tree"))
-          }
-        >
-          <TreePine size={ICON_SIZE} strokeWidth={ICON_STROKE} />
-          <span style={btnLabelStyle}>Tree</span>
         </button>
         <button
           title="Panel Report"

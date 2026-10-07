@@ -194,8 +194,6 @@ export const InteractiveScene = ({
       };
       setLots((prev) => [...prev, newLot]);
       setSelectedLotId(newLot.id);
-      setMode("select");
-      setActiveTool("select");
       drawStartRef.current = null;
       drawStartSnapRef.current = null;
       drawEndSnapRef.current = null;
@@ -280,10 +278,6 @@ export const InteractiveScene = ({
       });
     });
     setSelectedId(newRect.id);
-    // A completed Draw operation is a single-shot action. Reset the draft and
-    // return to Select so the next click cannot accidentally start another roof.
-    setMode("select");
-    setActiveTool("select");
     drawStartRef.current = null;
     drawStartSnapRef.current = null;
     drawEndSnapRef.current = null;
@@ -291,19 +285,21 @@ export const InteractiveScene = ({
     setSnapIndicatorPos(null);
     setPreview(null);
     return true;
-  }, [setLots, setSelectedLotId, setRectangles, setSelectedId, setMode, setActiveTool]);
+  }, [setLots, setSelectedLotId, setRectangles, setSelectedId]);
 
-  const onGroundContextMenu = useCallback(
-    (e: ThreeEvent<MouseEvent>) => {
-      // The actual Draw commit is handled by the R3F pointer-down event.
-      // This handler only prevents the browser context menu.
-      if (modeRef.current === "draw") {
-        e.preventDefault();
-        e.stopPropagation();
-      }
-    },
-    [],
-  );
+  useEffect(() => {
+    const onContextMenu = (e: MouseEvent) => {
+      if (modeRef.current !== "draw") return;
+      e.preventDefault();
+      e.stopPropagation();
+
+      // Finishing is handled by the second left-click in the ground pointer
+      // handler. Context menu is only suppressed while drawing.
+    };
+
+    window.addEventListener("contextmenu", onContextMenu, true);
+    return () => window.removeEventListener("contextmenu", onContextMenu, true);
+  }, []);
 
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {
@@ -370,23 +366,6 @@ export const InteractiveScene = ({
 
       if (e.button === 2) {
         e.stopPropagation();
-
-        if (m !== "draw") return;
-
-        if (tool === "polygon" || tool === "polygon-lot") {
-          if (polygonPoints.length >= 3) finalizePolygonDraft();
-          else clearPolygonDraft();
-          return;
-        }
-
-        if (drawStartRef.current) {
-          const point = rayToGroundPoint(e);
-          const end = drawEndSnapRef.current
-            ? new Vector3(...drawEndSnapRef.current.point)
-            : point;
-          lastGroundPointRef.current = end.clone();
-          finishStandardDraw(end);
-        }
         return;
       }
 
@@ -425,6 +404,28 @@ export const InteractiveScene = ({
 
       if (m === "draw") {
         e.stopPropagation();
+
+        // The first left-click starts the structure; the second left-click
+        // commits it. Right-click is intentionally not used for finishing.
+        if (drawStartRef.current) {
+          const endSnap = findSnapTarget(point, "__new__", rectanglesRef.current);
+          const roofType =
+            tool === "flat" ? "flat" : tool === "shed" ? "shed" : "hip";
+          const usableEndSnap = endSnap
+            ? (rectanglesRef.current.find((r) => r.id === endSnap.rectId)?.roofType ?? "hip") === roofType
+              ? endSnap
+              : null
+            : null;
+          const endPoint = usableEndSnap ? new Vector3(...usableEndSnap.point) : point;
+          drawEndSnapRef.current = usableEndSnap;
+          lastGroundPointRef.current = endPoint.clone();
+          if (finishStandardDraw(endPoint)) {
+            setMode("select");
+            setActiveTool("select");
+          }
+          return;
+        }
+
         const roofType =
           tool === "flat" ? "flat" : tool === "shed" ? "shed" : "hip";
         const snap = findSnapTarget(point, "__new__", rectanglesRef.current);
@@ -446,15 +447,7 @@ export const InteractiveScene = ({
         setSelectedLotId(null);
       }
     },
-    [
-      setSelectedId,
-      setTrees,
-      setSelectedLotId,
-      polygonPoints,
-      finalizePolygonDraft,
-      clearPolygonDraft,
-      finishStandardDraw,
-    ],
+    [setSelectedId, setTrees, setSelectedLotId, polygonPoints, finalizePolygonDraft, finishStandardDraw, setMode, setActiveTool],
   );
 
   const onGroundPointerMove = useCallback(
@@ -1128,7 +1121,6 @@ export const InteractiveScene = ({
         rotation={[-Math.PI / 2, 0, 0]}
         position={[0, -0.001, 0]}
         onPointerDown={onGroundPointerDown}
-        onContextMenu={onGroundContextMenu}
       >
         <planeGeometry args={[1000, 1000]} />
         <meshBasicMaterial
