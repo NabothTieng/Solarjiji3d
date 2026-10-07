@@ -1,0 +1,119 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
+.app-container {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  background: #1a1a2e;
+  color: black;
+}
+
+.canvas-wrapper {
+  flex: 1;
+  position: relative;
+  overflow: hidden;
+  background: #2d3748;
+}
+
+.fabric-canvas-container {
+  width: 100%;
+  height: 100%;
+}
+
+.fabric-canvas-container canvas {
+  display: block;
+}
+
+/* Scrollbar styles */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #1a1a2e;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #4a5568;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #718096;
+}
+
+/* Position Leva panel at bottom-left */
+#leva__root {
+  position: fixed !important;
+  top: auto !important;
+  right: auto !important;
+  bottom: 16px !important;
+  left: 16px !important;
+  z-index: 200;
+}
+
+#leva__root > div {
+  top: auto !important;
+  right: auto !important;
+}
+/* Target Input */
+.generator-input {
+  -webkit-appearance: none;
+  width: 100%;
+  background: transparent;
+  cursor: pointer;
+}
+
+/* --- Webkit Browsers --- */
+.generator-input::-webkit-slider-runnable-track {
+  height: 2px;
+  background: #fab387;
+  border-radius: 0px;
+  border: 0px solid #fab387;
+  box-shadow: 0px 2px 0px rgba(250, 179, 135, 0.1);
+}
+
+.generator-input::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  height: 14px;
+  width: 14px;
+  background: #fab387;
+  border-radius: 4px;
+  border: 0px solid #ffffff;
+  box-shadow: 0px 4px 0px rgba(0, 0, 0, 0.3);
+  margin-top: -6px;
+}
+
+/* --- Firefox --- */
+.generator-input::-moz-range-track {
+  height: 2px;
+  background: #fab387;
+  border-radius: 0px;
+  border: 0px solid #fab387;
+  box-shadow: 0px 2px 0px rgba(250, 179, 135, 0.1);
+}
+
+.generator-input::-moz-range-thumb {
+  height: 14px;
+  width: 14px;
+  background: #fab387;
+  border-radius: 4px;
+  border: 0px solid #ffffff;
+  box-shadow: 0px 4px 0px rgba(0, 0, 0, 0.3);
+}
+.generator-input {
+display: none;
+}
