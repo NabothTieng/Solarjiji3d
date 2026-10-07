@@ -51,6 +51,8 @@ export const InteractiveScene = ({
   const [rectangles, setRectangles] = useAtom(rectanglesAtom);
   const [selectedId, setSelectedId] = useAtom(selectedRectangleIdAtom);
   const mode = useAtomValue(interactionModeAtom);
+  const setMode = useSetAtom(interactionModeAtom);
+  const setActiveTool = useSetAtom(activeToolAtom);
   const setIsDraggingHandle = useSetAtom(isDraggingHandleAtom);
   const activeTool = useAtomValue(activeToolAtom);
   const setSolarPanelConfigs = useSetAtom(solarPanelConfigsAtom);
@@ -192,6 +194,8 @@ export const InteractiveScene = ({
       };
       setLots((prev) => [...prev, newLot]);
       setSelectedLotId(newLot.id);
+      setMode("select");
+      setActiveTool("select");
       drawStartRef.current = null;
       drawStartSnapRef.current = null;
       drawEndSnapRef.current = null;
@@ -276,6 +280,10 @@ export const InteractiveScene = ({
       });
     });
     setSelectedId(newRect.id);
+    // A completed Draw operation is a single-shot action. Reset the draft and
+    // return to Select so the next click cannot accidentally start another roof.
+    setMode("select");
+    setActiveTool("select");
     drawStartRef.current = null;
     drawStartSnapRef.current = null;
     drawEndSnapRef.current = null;
@@ -283,27 +291,19 @@ export const InteractiveScene = ({
     setSnapIndicatorPos(null);
     setPreview(null);
     return true;
-  }, [setLots, setSelectedLotId, setRectangles, setSelectedId]);
+  }, [setLots, setSelectedLotId, setRectangles, setSelectedId, setMode, setActiveTool]);
 
-  useEffect(() => {
-    const onContextMenu = (e: MouseEvent) => {
-      if (modeRef.current !== "draw") return;
-      e.preventDefault();
-      e.stopPropagation();
-
-      const tool = activeToolRef.current;
-      if (tool === "polygon" || tool === "polygon-lot") {
-        finalizePolygonDraft();
-        return;
+  const onGroundContextMenu = useCallback(
+    (e: ThreeEvent<MouseEvent>) => {
+      // The actual Draw commit is handled by the R3F pointer-down event.
+      // This handler only prevents the browser context menu.
+      if (modeRef.current === "draw") {
+        e.preventDefault();
+        e.stopPropagation();
       }
-
-      const point = lastGroundPointRef.current;
-      if (point) finishStandardDraw(point);
-    };
-
-    window.addEventListener("contextmenu", onContextMenu, true);
-    return () => window.removeEventListener("contextmenu", onContextMenu, true);
-  }, [finalizePolygonDraft, finishStandardDraw]);
+    },
+    [],
+  );
 
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {
@@ -370,6 +370,23 @@ export const InteractiveScene = ({
 
       if (e.button === 2) {
         e.stopPropagation();
+
+        if (m !== "draw") return;
+
+        if (tool === "polygon" || tool === "polygon-lot") {
+          if (polygonPoints.length >= 3) finalizePolygonDraft();
+          else clearPolygonDraft();
+          return;
+        }
+
+        if (drawStartRef.current) {
+          const point = rayToGroundPoint(e);
+          const end = drawEndSnapRef.current
+            ? new Vector3(...drawEndSnapRef.current.point)
+            : point;
+          lastGroundPointRef.current = end.clone();
+          finishStandardDraw(end);
+        }
         return;
       }
 
@@ -429,7 +446,15 @@ export const InteractiveScene = ({
         setSelectedLotId(null);
       }
     },
-    [setSelectedId, setTrees, setSelectedLotId, polygonPoints, finalizePolygonDraft],
+    [
+      setSelectedId,
+      setTrees,
+      setSelectedLotId,
+      polygonPoints,
+      finalizePolygonDraft,
+      clearPolygonDraft,
+      finishStandardDraw,
+    ],
   );
 
   const onGroundPointerMove = useCallback(
@@ -845,14 +870,6 @@ export const InteractiveScene = ({
       }
 
 
-      if (m === "draw" && drawStartRef.current) {
-        const rawEnd = rayToGroundPoint(e);
-        const end = drawEndSnapRef.current ? new Vector3(...drawEndSnapRef.current.point) : rawEnd;
-        lastGroundPointRef.current = end.clone();
-        finishStandardDraw(end);
-      }
-
-
       let didCreateMerge = false;
       if (drag?.type === "handle" && drag.handle && snapTargetRef.current) {
         const snap = snapTargetRef.current;
@@ -1111,6 +1128,7 @@ export const InteractiveScene = ({
         rotation={[-Math.PI / 2, 0, 0]}
         position={[0, -0.001, 0]}
         onPointerDown={onGroundPointerDown}
+        onContextMenu={onGroundContextMenu}
       >
         <planeGeometry args={[1000, 1000]} />
         <meshBasicMaterial
