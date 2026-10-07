@@ -108,8 +108,8 @@ const providerChipStyle: React.CSSProperties = {
 
 const providerChipActiveStyle: React.CSSProperties = {
   ...providerChipStyle,
-  background: "#89b4fa",
-  borderColor: "#89b4fa",
+  background: "#fab387",
+  borderColor: "#fab387",
   color: "#1e1e2e",
   fontWeight: 600,
 };
@@ -139,7 +139,7 @@ const moduleCardStyle: React.CSSProperties = {
 
 const moduleCardSelectedStyle: React.CSSProperties = {
   ...moduleCardStyle,
-  borderColor: "#89b4fa",
+  borderColor: "#fab387",
   background: "#24273a",
 };
 
@@ -297,7 +297,7 @@ export function ModuleCatalogDialog({
               checked={verifiedOnly}
               disabled={isLoading}
               onChange={(event) => setVerifiedOnly(event.currentTarget.checked)}
-              style={{ accentColor: "#89b4fa" }}
+              style={{ accentColor: "#fab387" }}
             />
             Verified only
           </label>
@@ -371,7 +371,7 @@ export function ModuleCatalogDialog({
                         <span style={verifiedBadgeStyle}>Verified</span>
                       )}
                       {isSelected && (
-                        <span style={{ color: "#89b4fa", fontSize: 11, fontWeight: 600 }}>
+                        <span style={{ color: "#fab387", fontSize: 11, fontWeight: 600 }}>
                           Selected
                         </span>
                       )}

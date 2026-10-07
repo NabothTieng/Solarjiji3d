@@ -43,7 +43,7 @@ function PanelSelectionSync() {
   useEffect(() => {
     if (selectedChimneyId) {
       setActivePanel("roof");
-      setRoofPanelTab("chimney");
+      setRoofPanelTab("roof");
       return;
     }
 
@@ -102,7 +102,7 @@ function App() {
             top={0}
             left={0}
             bottom={0}
-            w="72px"
+            w="clamp(4rem, 5vw, 4.5rem)"
             zIndex={100}
             pointerEvents="auto"
           >

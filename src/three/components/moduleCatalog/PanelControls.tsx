@@ -3,7 +3,7 @@ import { ModuleCatalog } from "./ModuleCatalog";
 import type { PvModuleSelection } from "./usePvModuleSelection";
 
 const defaultSectionTitleStyle: CSSProperties = {
-  fontSize: 11,
+  fontSize: "clamp(0.62rem, 0.7vw, 0.72rem)",
   fontWeight: 600,
   textTransform: "uppercase",
   letterSpacing: 1,
@@ -15,18 +15,18 @@ const labelStyle: CSSProperties = {
   display: "flex",
   alignItems: "center",
   justifyContent: "space-between",
-  gap: 8,
+  gap: "clamp(0.35rem, 0.6vw, 0.5rem)",
   marginBottom: 6,
 };
 
 const buttonStyle: CSSProperties = {
   width: "100%",
-  padding: "10px 0",
+  padding: "clamp(0.4rem, 0.8vh, 0.6rem) 0",
   borderRadius: 8,
   border: "none",
   cursor: "pointer",
   fontWeight: 600,
-  fontSize: 13,
+  fontSize: "clamp(0.72rem, 0.75vw, 0.82rem)",
   transition: "all 0.15s ease",
 };
 
@@ -124,7 +124,7 @@ export function PanelControls({
               <div style={labelStyle}>
                 <span style={{ color: "#a6adc8" }}>Distribution Angle</span>
                 <span
-                  style={{ color: "#89b4fa", fontSize: 12, fontWeight: 600 }}
+                  style={{ color: "#fab387", fontSize: "clamp(0.62rem, 0.7vw, 0.75rem)", fontWeight: 600 }}
                 >
                   {((rotationAngle * 180) / Math.PI).toFixed(0)} deg
                 </span>
@@ -141,8 +141,8 @@ export function PanelControls({
                 }}
                 style={{
                   width: "100%",
-                  accentColor: "#89b4fa",
-                  marginBottom: 12,
+                  accentColor: "#fab387",
+                  marginBottom: "clamp(0.45rem, 0.8vh, 0.65rem)",
                 }}
               />
             </>
@@ -150,7 +150,7 @@ export function PanelControls({
 
           <div style={labelStyle}>
             <span style={{ color: "#a6adc8" }}>Row Spacing</span>
-            <span style={{ color: "#89b4fa", fontSize: 12, fontWeight: 600 }}>
+            <span style={{ color: "#fab387", fontSize: "clamp(0.62rem, 0.7vw, 0.75rem)", fontWeight: 600 }}>
               {(rowSpacing * metersPerUnit).toFixed(2)} m
             </span>
           </div>
@@ -170,14 +170,14 @@ export function PanelControls({
             }}
             style={{
               width: "100%",
-              accentColor: "#89b4fa",
-              marginBottom: 12,
+              accentColor: "#fab387",
+              marginBottom: "clamp(0.45rem, 0.8vh, 0.65rem)",
             }}
           />
 
           <div style={labelStyle}>
             <span style={{ color: "#a6adc8" }}>Column Spacing</span>
-            <span style={{ color: "#89b4fa", fontSize: 12, fontWeight: 600 }}>
+            <span style={{ color: "#fab387", fontSize: "clamp(0.62rem, 0.7vw, 0.75rem)", fontWeight: 600 }}>
               {(columnSpacing * metersPerUnit).toFixed(2)} m
             </span>
           </div>
@@ -197,7 +197,7 @@ export function PanelControls({
             }}
             style={{
               width: "100%",
-              accentColor: "#89b4fa",
+              accentColor: "#fab387",
               marginBottom: isFlatSurface ? 12 : 0,
             }}
           />
@@ -207,7 +207,7 @@ export function PanelControls({
               <div style={labelStyle}>
                 <span style={{ color: "#a6adc8" }}>Stand Height</span>
                 <span
-                  style={{ color: "#89b4fa", fontSize: 12, fontWeight: 600 }}
+                  style={{ color: "#fab387", fontSize: "clamp(0.62rem, 0.7vw, 0.75rem)", fontWeight: 600 }}
                 >
                   {(standHeight * metersPerUnit).toFixed(2)} m
                 </span>
@@ -228,15 +228,15 @@ export function PanelControls({
                 }}
                 style={{
                   width: "100%",
-                  accentColor: "#89b4fa",
-                  marginBottom: 12,
+                  accentColor: "#fab387",
+                  marginBottom: "clamp(0.45rem, 0.8vh, 0.65rem)",
                 }}
               />
 
               <div style={labelStyle}>
                 <span style={{ color: "#a6adc8" }}>Inclination Angle</span>
                 <span
-                  style={{ color: "#89b4fa", fontSize: 12, fontWeight: 600 }}
+                  style={{ color: "#fab387", fontSize: "clamp(0.62rem, 0.7vw, 0.75rem)", fontWeight: 600 }}
                 >
                   {((inclinationAngle * 180) / Math.PI).toFixed(0)} deg
                 </span>
@@ -251,7 +251,7 @@ export function PanelControls({
                   const deg = sliderValueToNumber(event.currentTarget.value);
                   if (deg !== null) setInclinationAngle((deg * Math.PI) / 180);
                 }}
-                style={{ width: "100%", accentColor: "#89b4fa" }}
+                style={{ width: "100%", accentColor: "#fab387" }}
               />
             </>
           )}
@@ -266,7 +266,7 @@ export function PanelControls({
               display: "flex",
               alignItems: "center",
               justifyContent: "space-between",
-              fontSize: 12,
+              fontSize: "clamp(0.62rem, 0.7vw, 0.75rem)",
               color: livePreview.disabled ? "#6c7086" : "#cdd6f4",
               cursor: livePreview.disabled ? "not-allowed" : "pointer",
             }}
@@ -279,7 +279,7 @@ export function PanelControls({
               onChange={(event) =>
                 livePreview.onChange(event.currentTarget.checked)
               }
-              style={{ accentColor: "#89b4fa" }}
+              style={{ accentColor: "#fab387" }}
             />
           </label>
         </div>
@@ -292,7 +292,7 @@ export function PanelControls({
             onClick={actions.onGenerate}
             style={{
               ...buttonStyle,
-              background: "#89b4fa",
+              background: "#fab387",
               color: "#1e1e2e",
               marginBottom: actions.showClear ? 10 : 0,
             }}
@@ -300,7 +300,7 @@ export function PanelControls({
               (event.currentTarget.style.background = "#74a8f7")
             }
             onMouseLeave={(event) =>
-              (event.currentTarget.style.background = "#89b4fa")
+              (event.currentTarget.style.background = "#fab387")
             }
           >
             {actions.generateLabel ?? "Generate"}

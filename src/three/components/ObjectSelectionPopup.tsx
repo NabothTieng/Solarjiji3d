@@ -21,6 +21,7 @@ export function ObjectSelectionPopup() {
   const selectedTree = useAtomValue(selectedTreeAtom);
   const selectedChimney = useAtomValue(selectedChimneyAtom);
   const selectedRectId = useAtomValue(selectedRectangleIdAtom);
+  const rectangles = useAtomValue(rectanglesAtom);
   const setRectangles = useSetAtom(rectanglesAtom);
   const setSelectedRectId = useSetAtom(selectedRectangleIdAtom);
   const setTrees = useSetAtom(trees3DAtom);
@@ -30,6 +31,9 @@ export function ObjectSelectionPopup() {
   const setSolarPanelConfigs = useSetAtom(solarPanelConfigsAtom);
   const setActivePanel = useSetAtom(activePanelAtom);
   const metersPerUnit = useAtomValue(metersPerUnitAtom);
+  const parentRoof = selectedChimney
+    ? rectangles.find((r) => r.id === selectedChimney.rectangleId)
+    : null;
 
   const selected = selectedChimney || selectedTree || selectedRect;
   if (!selected) return null;
@@ -101,57 +105,89 @@ export function ObjectSelectionPopup() {
       position="absolute"
       top="2%"
       right="2%"
-      width="20%"
-      maxWidth="25%"
-      minWidth="20%"
+      width="clamp(10rem, 17vw, 15rem)"
+      maxWidth="calc(100% - 1rem)"
+      minWidth="0"
       bg="rgba(30,30,46,0.96)"
       border="0.05rem solid #45475a"
       borderRadius="0.5rem"
       color="#cdd6f4"
-      padding="2%"
+      padding="clamp(0.55rem, 0.9vw, 0.8rem)"
       zIndex={500}
       boxShadow="0 0.5rem 1.5rem rgba(0,0,0,0.28)"
       backdropFilter="blur(10px)"
     >
-      <Box display="flex" justifyContent="space-between" alignItems="flex-start" mb="5%" gap="4%">
-        <Box>
-          <Span display="block" fontSize="0.8rem" fontWeight={700}>{title}</Span>
-          <Span display="block" fontSize="0.6rem" color="#a6adc8" mt="3%">{type}</Span>
+      <Box display="flex" justifyContent="space-between" alignItems="flex-start" mb="clamp(0.45rem, 0.8vh, 0.65rem)" gap="clamp(0.4rem, 0.8vw, 0.65rem)">
+        <Box minW={0}>
+          <Span display="block" fontSize="clamp(0.72rem, 0.8vw, 0.82rem)" fontWeight={700}>{title}</Span>
+          <Span display="block" fontSize="clamp(0.55rem, 0.62vw, 0.65rem)" color="#a6adc8" mt="0.2rem">{type}</Span>
         </Box>
         <Button
           onClick={closeSelection}
           variant="ghost"
           minW="0"
-          w="18%"
+          w="clamp(1.5rem, 2.2vw, 2rem)"
           aspectRatio="1"
           padding={0}
           color="#f90f02"
-          fontSize="1.1rem"
+          fontSize="clamp(0.9rem, 1.1vw, 1.1rem)"
         >
           x
         </Button>
       </Box>
 
-      <Box display="grid" gap="4%" mb="7%">
+      <Box display="grid" gap="clamp(0.25rem, 0.5vh, 0.4rem)" mb="clamp(0.45rem, 0.8vh, 0.65rem)">
         {details.map(([label, value]) => (
-          <Box key={label} display="flex" justifyContent="space-between" fontSize="0.65rem">
+          <Box key={label} display="flex" justifyContent="space-between" fontSize="clamp(0.58rem, 0.65vw, 0.68rem)">
             <Span color="#a6adc8">{label}</Span>
             <Span color="#cdd6f4" fontWeight={600}>{value}</Span>
           </Box>
         ))}
       </Box>
 
+      {selectedChimney && parentRoof && (
+        <Box
+          mt="clamp(0.55rem, 1vh, 0.8rem)"
+          mb="clamp(0.55rem, 1vh, 0.8rem)"
+          padding="clamp(0.45rem, 0.8vh, 0.65rem)"
+          bg="rgba(49,50,68,0.72)"
+          border="0.0625rem solid rgba(250,179,135,0.28)"
+          borderRadius="clamp(0.35rem, 0.5vw, 0.45rem)"
+        >
+          <Box
+            color="#fab387"
+            fontSize="clamp(0.62rem, 0.7vw, 0.72rem)"
+            fontWeight={700}
+            textTransform="uppercase"
+            letterSpacing="0.06rem"
+            mb="clamp(0.3rem, 0.55vh, 0.45rem)"
+          >
+            Parent Roof
+          </Box>
+          <Box display="grid" gap="clamp(0.2rem, 0.45vh, 0.35rem)" fontSize="clamp(0.58rem, 0.65vw, 0.68rem)">
+            <Box display="flex" justifyContent="space-between" gap="0.5rem">
+              <Span color="#a6adc8">Roof Type</Span>
+              <Span textTransform="capitalize" fontWeight={600}>{parentRoof.roofType}</Span>
+            </Box>
+            <Box display="flex" justifyContent="space-between" gap="0.5rem">
+              <Span color="#a6adc8">Roof Length</Span>
+              <Span fontWeight={600}>{(Math.hypot(parentRoof.end[0] - parentRoof.start[0], parentRoof.end[2] - parentRoof.start[2]) * metersPerUnit).toFixed(2)} m</Span>
+            </Box>
+          </Box>
+        </Box>
+      )}
+
       <Button
         onClick={deleteSelected}
         width="full"
         h="auto"
         minH="0"
-        py="6%"
+        py="clamp(0.35rem, 0.7vh, 0.5rem)"
         bg="#45475a"
         border="1px solid #f38ba8"
         color="#f38ba8"
         borderRadius="0.4rem"
-        fontSize="0.65rem"
+        fontSize="clamp(0.58rem, 0.65vw, 0.68rem)"
         fontWeight={600}
         display="flex"
         gap="4%"

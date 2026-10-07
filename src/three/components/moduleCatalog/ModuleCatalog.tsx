@@ -4,7 +4,7 @@ import { ModuleCatalogDialog } from "./ModuleCatalogDialog";
 import type { PvModuleSelection } from "./usePvModuleSelection";
 
 const sectionTitleStyleDefault: React.CSSProperties = {
-  fontSize: 11,
+  fontSize: "clamp(0.62rem, 0.7vw, 0.72rem)",
   fontWeight: 600,
   textTransform: "uppercase",
   letterSpacing: 1,
@@ -15,37 +15,37 @@ const sectionTitleStyleDefault: React.CSSProperties = {
 const selectedCardStyle: React.CSSProperties = {
   background: "#313244",
   borderRadius: 8,
-  padding: "10px 14px",
+  padding: "clamp(0.5rem, 0.8vh, 0.65rem) clamp(0.65rem, 0.9vw, 0.85rem)",
   display: "flex",
   flexDirection: "column",
-  gap: 4,
-  fontSize: 12,
+  gap: "clamp(0.2rem, 0.4vh, 0.35rem)",
+  fontSize: "clamp(0.62rem, 0.7vw, 0.75rem)",
   marginBottom: 8,
 };
 
 const specRowStyle: React.CSSProperties = {
   display: "flex",
   justifyContent: "space-between",
-  gap: 8,
+  gap: "clamp(0.35rem, 0.6vw, 0.5rem)",
 };
 
 const browseButtonStyle: React.CSSProperties = {
   width: "100%",
-  padding: "9px 0",
+  padding: "clamp(0.4rem, 0.75vh, 0.55rem) 0",
   borderRadius: 8,
   border: "1px solid #45475a",
   background: "#11111b",
-  color: "#89b4fa",
+  color: "#fab387",
   cursor: "pointer",
   fontWeight: 600,
-  fontSize: 12,
+  fontSize: "clamp(0.62rem, 0.7vw, 0.75rem)",
   transition: "all 0.15s ease",
 };
 
 const helperTextStyle: React.CSSProperties = {
   margin: "6px 0 0",
   color: "#a6adc8",
-  fontSize: 11,
+  fontSize: "clamp(0.62rem, 0.7vw, 0.72rem)",
   lineHeight: 1.4,
 };
 
@@ -74,7 +74,7 @@ export function ModuleCatalog({
       <div style={sectionTitleStyle}>Module Catalog</div>
       {selectedPvModule ? (
         <div style={selectedCardStyle}>
-          <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 2 }}>
+          <div style={{ fontSize: "clamp(0.72rem, 0.75vw, 0.82rem)", fontWeight: 600, marginBottom: 2 }}>
             {getPvModuleDisplayName(selectedPvModule)}
           </div>
           <div style={specRowStyle}>
@@ -110,7 +110,7 @@ export function ModuleCatalog({
         }}
         onMouseEnter={(event) => {
           event.currentTarget.style.background = "#181825";
-          event.currentTarget.style.borderColor = "#89b4fa";
+          event.currentTarget.style.borderColor = "#fab387";
         }}
         onMouseLeave={(event) => {
           event.currentTarget.style.background = "#11111b";

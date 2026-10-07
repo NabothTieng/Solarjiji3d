@@ -410,7 +410,7 @@ export const deleteTreeAtom = atom(null, (get, set, treeId: string) => {
 export type ActivePanel = 'roof' | 'solar' | 'sun' | 'tree' | 'chimney' | null;
 export const activePanelAtom = atom<ActivePanel>('roof');
 
-export type RoofPanelTab = 'roof' | 'solar' | 'chimney';
+export type RoofPanelTab = 'roof' | 'solar';
 export const roofPanelTabAtom = atom<RoofPanelTab>('roof');
 
 

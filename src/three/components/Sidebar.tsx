@@ -25,6 +25,8 @@ import {
   undoAtom,
 } from "../store/historyStore";
 import { activePanelAtom } from "../../store/atoms";
+import { selectedRectangleIdAtom, selectedChimneyIdAtom, selectedTreeIdAtom } from "../store/rectangleStore";
+import { selectedRoofSideAtom } from "../store/solarPanelStore";
 import { useSaveHandler } from "../../context/SaveHandlerContext";
 import { useCollectPlannerData } from "../../hooks/useCollectPlannerData";
 
@@ -45,17 +47,20 @@ interface ToolSection {
 
 const sidebarStyle: React.CSSProperties = {
   position: "absolute",
-  top: 0,
-  left: 0,
-  bottom: 0,
+  top: "clamp(0.5rem, 1.5vh, 1rem)",
+  left: "clamp(0.5rem, 1vw, 0.85rem)",
   width: "clamp(4rem, 5vw, 4.5rem)",
   background: "rgba(40, 40, 50, 0.95)",
   backdropFilter: "blur(8px)",
   display: "flex",
   flexDirection: "column",
+  alignItems: "stretch",
   zIndex: 200,
   overflow: "visible",
-  borderRight: "0.0625rem solid rgba(255,255,255,0.08)",
+  border: "0.0625rem solid rgba(255,255,255,0.08)",
+  borderRadius: "clamp(0.55rem, 0.8vw, 0.75rem)",
+  boxShadow: "0 0.6rem 1.5rem rgba(0,0,0,0.22)",
+  padding: "clamp(0.25rem, 0.55vh, 0.4rem) 0",
 };
 
 const sectionTitleStyle: React.CSSProperties = {
@@ -154,6 +159,10 @@ export default function Sidebar() {
   const [mode, setMode] = useAtom(interactionModeAtom);
   const [activeTool, setActiveTool] = useAtom(activeToolAtom);
   const [activePanel, setActivePanel] = useAtom(activePanelAtom);
+  const setSelectedRectangleId = useSetAtom(selectedRectangleIdAtom);
+  const setSelectedChimneyId = useSetAtom(selectedChimneyIdAtom);
+  const setSelectedTreeId = useSetAtom(selectedTreeIdAtom);
+  const setSelectedRoofSide = useSetAtom(selectedRoofSideAtom);
   const [showDrawPalette, setShowDrawPalette] = useState(false);
   const canUndo = useAtomValue(canUndoAtom);
   const canRedo = useAtomValue(canRedoAtom);
@@ -180,12 +189,25 @@ export default function Sidebar() {
   }, [setMode, setActiveTool]);
 
   const handleDraw = useCallback(() => {
-    // Draw is a category/menu action. Do not enter drawing mode until
-    // the user explicitly chooses Roof, Lot, or Tree from the palette.
+    // Starting a new draw workflow must clear the current selection and
+    // close all property panels first, so the palette is always on top.
+    setSelectedRectangleId(null);
+    setSelectedChimneyId(null);
+    setSelectedTreeId(null);
+    setSelectedRoofSide(null);
+    setActivePanel(null);
     setMode("select");
     setActiveTool("select");
     setShowDrawPalette(true);
-  }, [setMode, setActiveTool]);
+  }, [
+    setSelectedRectangleId,
+    setSelectedChimneyId,
+    setSelectedTreeId,
+    setSelectedRoofSide,
+    setActivePanel,
+    setMode,
+    setActiveTool,
+  ]);
 
   const handleDrawPaletteTool = useCallback((tool: "hip" | "lot" | "tree") => {
     setMode("draw");
@@ -250,7 +272,7 @@ export default function Sidebar() {
           display: "flex",
           flexDirection: "column",
           alignItems: "center",
-          paddingTop: "clamp(0.4rem, 1vh, 0.65rem)",
+          paddingTop: "clamp(0.25rem, 0.5vh, 0.4rem)",
         }}
       >
         <button
@@ -270,15 +292,6 @@ export default function Sidebar() {
         >
           {MiscIcons.draw}
           <span style={btnLabelStyle}>Draw</span>
-        </button>
-
-        <button
-          title="Draw Polygon"
-          style={isPolygonTool ? btnActive : btnBase}
-          onClick={handlePolygonDraw}
-        >
-          {MiscIcons.polygon}
-          <span style={btnLabelStyle}>Polygon</span>
         </button>
 
         <button
@@ -355,24 +368,27 @@ export default function Sidebar() {
             <TreePine size={ICON_SIZE} strokeWidth={ICON_STROKE} />
             <span style={btnLabelStyle}>Tree</span>
           </button>
+          <button
+            title="Draw Polygon"
+            style={isPolygonTool ? paletteBtnActive : paletteBtnBase}
+            onClick={handlePolygonDraw}
+          >
+            {MiscIcons.polygon}
+            <span style={btnLabelStyle}>Polygon</span>
+          </button>
         </div>
       )}
 
-      <div style={{ flex: 1 }} />
-
-      {}
       <div
         style={{
           display: "flex",
           flexDirection: "column",
           alignItems: "center",
-          paddingBottom: "clamp(0.5rem, 1.5vh, 0.75rem)",
-          gap: "clamp(0.15rem, 0.4vh, 0.3rem)",
-          borderTop: "0.0625rem solid rgba(255,255,255,0.08)",
-          paddingTop: "clamp(0.4rem, 1vh, 0.65rem)",
+          gap: "clamp(0.08rem, 0.2vh, 0.16rem)",
+          marginTop: "clamp(0.15rem, 0.3vh, 0.25rem)",
+          paddingTop: "clamp(0.15rem, 0.3vh, 0.25rem)",
         }}
       >
-        <div style={sectionTitleStyle}>Panels</div>
         <button
           title="Sun Position"
           style={activePanel === "sun" ? btnActive : btnBase}

@@ -1,5 +1,5 @@
 import { useAtom } from "jotai";
-import { Home, LayoutGrid, Factory } from "lucide-react";
+import { Home, LayoutGrid } from "lucide-react";
 import { roofPanelTabAtom } from "../../store/atoms";
 
 const tabBarStyle: React.CSSProperties = {
@@ -55,14 +55,6 @@ export function RoofPanelTabs() {
       >
         <LayoutGrid size="clamp(0.85rem, 1vw, 1rem)" strokeWidth={1.75} />
         Solar
-      </button>
-      <button
-        type="button"
-        style={tab === "chimney" ? tabActive : tabBase}
-        onClick={() => setTab("chimney")}
-      >
-        <Factory size="clamp(0.85rem, 1vw, 1rem)" strokeWidth={1.75} />
-        Chimney
       </button>
     </div>
   );

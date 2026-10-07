@@ -7,7 +7,10 @@ import {
   type RoofType,
   type Rectangle3D,
   type ShedDirection,
+  type Chimney3D,
+  type ChimneyShape,
   chimneysAtom,
+  selectedChimneyAtom,
   selectedChimneyIdAtom,
   isDraggingHandleAtom,
 } from "../store/rectangleStore";
@@ -20,7 +23,7 @@ import { solarPanelConfigsAtom } from "../store/solarPanelStore";
 import { Box, Button, Input, Span, VStack } from "@chakra-ui/react";
 
 import { RoofPanelTabs } from "./RoofPanelTabs";
-import { ChimneyPropertiesPanel } from "../../ui/components/panels/ChimneyPropertiesPanel";
+import ShapeButton from "../../ui/components/buttons/ShapeButton";
 
 
 function RoofTypeButton({
@@ -168,13 +171,6 @@ function SectionTitle({
   );
 }
 
-const dimensionSliderStyle: React.CSSProperties = {
-  width: "100%",
-  height: "clamp(0.25rem, 0.45vh, 0.375rem)",
-  accentColor: "#89b4fa",
-  cursor: "pointer",
-};
-
 const dimensionNumberInputStyle: React.CSSProperties = {
   width: "clamp(3.6rem, 5.2vw, 4.6rem)",
   alignSelf: "flex-end",
@@ -195,6 +191,7 @@ export function RoofPropertiesPanel() {
   const selectedRect = useAtomValue(selectedRectangleAtom);
   const [rectangles, setRectangles] = useAtom(rectanglesAtom);
   const [, setChimneys] = useAtom(chimneysAtom);
+  const selectedChimney = useAtomValue(selectedChimneyAtom);
   const [, setSolarPanelConfigs] = useAtom(solarPanelConfigsAtom);
   const setSelectedChimneyId = useSetAtom(selectedChimneyIdAtom);
   const metersPerUnit = useAtomValue(metersPerUnitAtom);
@@ -207,6 +204,12 @@ export function RoofPropertiesPanel() {
     chimney: false,
   });
   const [activePanel, setActivePanel] = useAtom(activePanelAtom);
+
+  useEffect(() => {
+    if (selectedChimney) {
+      setExpandedSections((prev) => ({ ...prev, chimney: true }));
+    }
+  }, [selectedChimney?.id]);
 
   const toggleSection = useCallback((id: string) => {
     setExpandedSections((prev) => ({ ...prev, [id]: !prev[id] }));
@@ -243,16 +246,7 @@ export function RoofPropertiesPanel() {
     return () => window.removeEventListener("keydown", handler);
   }, [selectedRect, deleteRect]);
 
-
-  if (activePanel !== "roof") return null;
-  if (roofPanelTab === "chimney") return <ChimneyPropertiesPanel />;
-  if (roofPanelTab !== "roof") return null;
-  if (!selectedRect) return null;
-
-
-  if (isDraggingHandle) return null;
-
-  const collapsed = collapsedId === selectedRect.id;
+  const collapsed = collapsedId === selectedRect?.id;
 
   const closePanel = () => setActivePanel(null);
 
@@ -344,23 +338,56 @@ export function RoofPropertiesPanel() {
     };
     setChimneys((prev) => [...prev, newChimney]);
     setSelectedChimneyId(newChimney.id);
+    setExpandedSections((prev) => ({ ...prev, chimney: true }));
   };
+
+  const updateChimney = useCallback((updates: Partial<Chimney3D>) => {
+    if (!selectedChimney) return;
+    setChimneys((prev) =>
+      prev.map((c) => (c.id === selectedChimney.id ? { ...c, ...updates } : c)),
+    );
+  }, [selectedChimney, setChimneys]);
+
+  const deleteChimney = useCallback(() => {
+    if (!selectedChimney) return;
+    setChimneys((prev) => prev.filter((c) => c.id !== selectedChimney.id));
+    setSelectedChimneyId(null);
+  }, [selectedChimney, setChimneys, setSelectedChimneyId]);
+
+  const handleShapeChange = useCallback((shape: ChimneyShape) => {
+    updateChimney({
+      shape,
+      width: shape === "circular" ? 0.3 : 0.4,
+      depth: shape === "circular" ? 0.3 : 0.3,
+    });
+  }, [updateChimney]);
+
+  // Keep every hook above these guards so the component has the same hook
+  // order whether a roof is selected or not. A roof selection can change
+  // immediately after drawing, which must not introduce new hooks mid-render.
+  if (activePanel !== "roof") return null;
+  if (roofPanelTab !== "roof") return null;
+  if (!selectedRect) return null;
+  if (isDraggingHandle) return null;
 
   return (
     <Box
       position="absolute"
-      left="clamp(4rem, 5vw, 4.5rem)"
-      top={0}
+      left="calc(clamp(4rem, 5vw, 4.5rem) + clamp(0.4rem, 0.8vw, 0.7rem))"
+      top="clamp(0.5rem, 2vh, 1rem)"
       width={collapsed ? "clamp(2.8rem, 3vw, 3.4rem)" : "clamp(15rem, 17vw, 18rem)"}
-      height="100%"
+      maxHeight="calc(100% - clamp(1rem, 4vh, 2rem))"
       bg="rgba(40, 40, 50, 0.97)"
       color="#cdd6f4"
-      borderRight="0.0625rem solid rgba(255,255,255,0.08)"
+      border="0.0625rem solid rgba(255,255,255,0.08)"
+      borderRadius="clamp(0.55rem, 0.8vw, 0.75rem)"
+      boxShadow="0 0.6rem 1.8rem rgba(0,0,0,0.28)"
+      backdropFilter="blur(10px)"
       display="flex"
       flexDirection="column"
       fontFamily='-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
       fontSize="clamp(0.72rem, 0.75vw, 0.82rem)"
-      zIndex={200}
+      zIndex={300}
       overflow="hidden"
       transition="width 0.2s ease"
     >
@@ -395,8 +422,11 @@ export function RoofPropertiesPanel() {
 
       {}
       <Box
-        flex={1}
+        className="floating-properties-scroll"
+        flex="1 1 auto"
+        minH={0}
         overflowY="auto"
+        sx={{ scrollbarWidth: "none", msOverflowStyle: "none", "&::-webkit-scrollbar": { display: "none" } }}
         padding="clamp(0.65rem, 1vw, 0.9rem) clamp(0.75rem, 1.15vw, 1rem)"
         display={collapsed ? "none" : "flex"}
         flexDirection="column"
@@ -457,7 +487,7 @@ export function RoofPropertiesPanel() {
                 onChange={(e) =>
                   updateMeterDimension("wallHeight", parseFloat(e.target.value), 0.1)
                 }
-                style={dimensionSliderStyle}
+                className="generator-input"
               />
               <input
                 type="number"
@@ -497,7 +527,7 @@ export function RoofPropertiesPanel() {
                     onChange={(e) =>
                       updateMeterDimension("pitchAngle", parseFloat(e.target.value), 0.1)
                     }
-                    style={dimensionSliderStyle}
+                    className="generator-input"
                   />
                   <input
                     type="number"
@@ -537,7 +567,7 @@ export function RoofPropertiesPanel() {
                 onChange={(e) =>
                   updateMeterDimension("depth", parseFloat(e.target.value), 0.2)
                 }
-                style={dimensionSliderStyle}
+                className="generator-input"
               />
               <input
                 type="number"
@@ -689,27 +719,125 @@ export function RoofPropertiesPanel() {
 
         {}
         <Box>
-          <SectionTitle expanded={expandedSections.chimney} onToggle={() => toggleSection("chimney")}>Chimney / Obstacle</SectionTitle>
+          <SectionTitle expanded={expandedSections.chimney} onToggle={() => toggleSection("chimney")}>
+            Chimney / Obstacle
+          </SectionTitle>
           {expandedSections.chimney && (
-          <Button
-            onClick={addChimney}
-            width="full"
-            padding="clamp(0.4rem, 0.8vh, 0.6rem)"
-            bg="#313244"
-            border="1px solid #fab387"
-            borderRadius="clamp(0.35rem, 0.55vw, 0.5rem)"
-            color="#fab387"
-            fontWeight={600}
-            cursor="pointer"
-            fontSize="clamp(0.72rem, 0.75vw, 0.82rem)"
-            display="flex"
-            alignItems="center"
-            justifyContent="center"
-            gap={2}
-          >
-            🏠 Add Chimney
-          </Button>          )}
+            <Box
+              display="flex"
+              flexDirection="column"
+              gap="clamp(0.45rem, 0.8vh, 0.65rem)"
+              pt="clamp(0.45rem, 0.8vh, 0.65rem)"
+            >
+              {!selectedChimney ? (
+                <Button
+                  onClick={addChimney}
+                  width="full"
+                  padding="clamp(0.4rem, 0.8vh, 0.6rem)"
+                  bg="#313244"
+                  border="1px solid #fab387"
+                  borderRadius="clamp(0.35rem, 0.55vw, 0.5rem)"
+                  color="#fab387"
+                  fontWeight={600}
+                  cursor="pointer"
+                  fontSize="clamp(0.72rem, 0.75vw, 0.82rem)"
+                >
+                  + Add Chimney
+                </Button>
+              ) : (
+                <>
+                  <Box>
+                    <Box fontSize="clamp(0.62rem, 0.7vw, 0.72rem)" fontWeight={700} textTransform="uppercase" letterSpacing="0.06rem" color="#a6adc8" mb="clamp(0.25rem, 0.5vh, 0.4rem)">
+                      Shape
+                    </Box>
+                    <Box display="flex" gap="clamp(0.3rem, 0.5vw, 0.45rem)">
+                      <ShapeButton
+                        shape="rectangular"
+                        isActive={selectedChimney.shape === "rectangular"}
+                        onClick={() => handleShapeChange("rectangular")}
+                      />
+                      <ShapeButton
+                        shape="circular"
+                        isActive={selectedChimney.shape === "circular"}
+                        onClick={() => handleShapeChange("circular")}
+                      />
+                    </Box>
+                  </Box>
 
+                  <Box>
+                    <Box fontSize="clamp(0.62rem, 0.7vw, 0.72rem)" fontWeight={700} textTransform="uppercase" letterSpacing="0.06rem" color="#a6adc8" mb="clamp(0.25rem, 0.5vh, 0.4rem)">
+                      Position
+                    </Box>
+                    <Box display="flex" flexDirection="column" gap="clamp(0.3rem, 0.55vh, 0.45rem)">
+                      <Box display="flex" alignItems="center" justifyContent="space-between" gap="0.5rem">
+                        <Span>Along Roof</Span>
+                        <Span color="#a6adc8" fontSize="clamp(0.62rem, 0.65vw, 0.7rem)">
+                          {selectedChimney.localX.toFixed(2)} <Span color="#fab387">({(selectedChimney.localX * metersPerUnit).toFixed(2)} m)</Span>
+                        </Span>
+                      </Box>
+                      <Box display="flex" alignItems="center" gap="clamp(0.35rem, 0.6vw, 0.5rem)">
+                        <Input className="generator-input" type="range" min={-3} max={3} step={0.1} value={selectedChimney.localX} onChange={(e) => updateChimney({ localX: parseFloat(e.target.value) })} flex={1} accentColor="#fab387" />
+                        <Input type="number" step={0.1} value={selectedChimney.localX} onChange={(e) => updateChimney({ localX: parseFloat(e.target.value) || 0 })} width="clamp(3.2rem, 4.5vw, 4rem)" textAlign="right" padding="clamp(0.25rem, 0.5vh, 0.35rem) clamp(0.35rem, 0.6vw, 0.5rem)" background="#313244" border="1px solid #45475a" borderRadius="0.35rem" color="#cdd6f4" fontSize="clamp(0.65rem, 0.7vw, 0.75rem)" outline="none" />
+                      </Box>
+                      <Box display="flex" alignItems="center" justifyContent="space-between" gap="0.5rem">
+                        <Span>Across Roof</Span>
+                        <Span color="#a6adc8" fontSize="clamp(0.62rem, 0.65vw, 0.7rem)">
+                          {selectedChimney.localZ.toFixed(2)} <Span color="#fab387">({(selectedChimney.localZ * metersPerUnit).toFixed(2)} m)</Span>
+                        </Span>
+                      </Box>
+                      <Box display="flex" alignItems="center" gap="clamp(0.35rem, 0.6vw, 0.5rem)">
+                        <Input className="generator-input" type="range" min={-2} max={2} step={0.1} value={selectedChimney.localZ} onChange={(e) => updateChimney({ localZ: parseFloat(e.target.value) })} flex={1} accentColor="#fab387" />
+                        <Input type="number" step={0.1} value={selectedChimney.localZ} onChange={(e) => updateChimney({ localZ: parseFloat(e.target.value) || 0 })} width="clamp(3.2rem, 4.5vw, 4rem)" textAlign="right" padding="clamp(0.25rem, 0.5vh, 0.35rem) clamp(0.35rem, 0.6vw, 0.5rem)" background="#313244" border="1px solid #45475a" borderRadius="0.35rem" color="#cdd6f4" fontSize="clamp(0.65rem, 0.7vw, 0.75rem)" outline="none" />
+                      </Box>
+                    </Box>
+                  </Box>
+
+                  <Box>
+                    <Box fontSize="clamp(0.62rem, 0.7vw, 0.72rem)" fontWeight={700} textTransform="uppercase" letterSpacing="0.06rem" color="#a6adc8" mb="clamp(0.25rem, 0.5vh, 0.4rem)">
+                      Dimensions
+                    </Box>
+                    <VStack align="stretch" gap="clamp(0.3rem, 0.55vh, 0.45rem)">
+                      {([
+                        { key: "width", label: selectedChimney.shape === "circular" ? "Diameter" : "Width", min: 0.1, max: 1.5, maxNumber: 3 },
+                        ...(selectedChimney.shape === "rectangular" ? [{ key: "depth", label: "Depth", min: 0.1, max: 1.5, maxNumber: 3 }] : []),
+                        { key: "height", label: "Height", min: 0.2, max: 2, maxNumber: 5 },
+                      ] as const).map((dimension) => {
+                        const value = selectedChimney[dimension.key];
+                        return (
+                          <Box key={dimension.key}>
+                            <Box display="flex" alignItems="center" justifyContent="space-between" gap="0.5rem" mb="clamp(0.2rem, 0.4vh, 0.3rem)">
+                              <Span>{dimension.label}</Span>
+                              <Span color="#a6adc8" fontSize="clamp(0.62rem, 0.65vw, 0.7rem)">{value.toFixed(2)} <Span color="#fab387">({(value * metersPerUnit).toFixed(2)} m)</Span></Span>
+                            </Box>
+                            <Box display="flex" alignItems="center" gap="clamp(0.35rem, 0.6vw, 0.5rem)">
+                              <Input className="generator-input" type="range" min={dimension.min} max={dimension.max} step={0.05} value={value} onChange={(e) => updateChimney({ [dimension.key]: parseFloat(e.target.value) } as Partial<Chimney3D>)} flex={1} accentColor="#fab387" />
+                              <Input type="number" min={dimension.min} max={dimension.maxNumber} step={0.05} value={value} onChange={(e) => updateChimney({ [dimension.key]: Math.max(dimension.min, parseFloat(e.target.value) || dimension.min) } as Partial<Chimney3D>)} width="clamp(3.2rem, 4.5vw, 4rem)" textAlign="right" padding="clamp(0.25rem, 0.5vh, 0.35rem) clamp(0.35rem, 0.6vw, 0.5rem)" background="#313244" border="1px solid #45475a" borderRadius="0.35rem" color="#cdd6f4" fontSize="clamp(0.65rem, 0.7vw, 0.75rem)" outline="none" />
+                            </Box>
+                          </Box>
+                        );
+                      })}
+                    </VStack>
+                  </Box>
+
+                  <Box>
+                    <Box fontSize="clamp(0.62rem, 0.7vw, 0.72rem)" fontWeight={700} textTransform="uppercase" letterSpacing="0.06rem" color="#a6adc8" mb="clamp(0.25rem, 0.5vh, 0.4rem)">
+                      Color
+                    </Box>
+                    <Box display="grid" gridTemplateColumns="repeat(5, 1fr)" gap="clamp(0.2rem, 0.4vw, 0.3rem)" mb="clamp(0.35rem, 0.6vh, 0.5rem)">
+                      {["#8B4513", "#D2691E", "#808080", "#C0C0C0", "#800000"].map((c) => (
+                        <Button key={c} onClick={() => updateChimney({ color: c })} width="100%" aspectRatio="1" bg={c} border={selectedChimney.color === c ? "0.125rem solid #fab387" : "0.0625rem solid #45475a"} borderRadius="0.35rem" padding={0} minW={0} cursor="pointer" />
+                      ))}
+                    </Box>
+                    <Input type="color" value={selectedChimney.color} onChange={(e) => updateChimney({ color: e.target.value })} width="100%" height="clamp(1.5rem, 3vh, 1.8rem)" border="none" borderRadius="0.35rem" cursor="pointer" bg="transparent" />
+                  </Box>
+
+                  <Button onClick={deleteChimney} width="full" padding="clamp(0.35rem, 0.7vh, 0.5rem)" bg="#45475a" border="1px solid #f38ba8" borderRadius="0.4rem" color="#f38ba8" fontWeight={600} cursor="pointer" fontSize="clamp(0.68rem, 0.72vw, 0.78rem)">
+                    Delete Chimney
+                  </Button>
+                </>
+              )}
+            </Box>
+          )}
         </Box>
 
         {/* ------- Delete ------- */}

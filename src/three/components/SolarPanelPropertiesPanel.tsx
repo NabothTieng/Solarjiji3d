@@ -27,26 +27,28 @@ import { usePvModuleSelection } from "./moduleCatalog/usePvModuleSelection";
 
 const panelStyle: React.CSSProperties = {
   position: "absolute",
-  top: 0,
-  left: 72,
-  width: 280,
-  height: "100%",
-  background: "#1e1e2e",
+  top: "clamp(0.5rem, 2vh, 1rem)",
+  left: "calc(clamp(4rem, 5vw, 4.5rem) + clamp(0.4rem, 0.8vw, 0.7rem))",
+  width: "clamp(15rem, 17vw, 18rem)",
+  maxHeight: "calc(100% - clamp(1rem, 4vh, 2rem))",
+  background: "rgba(40, 40, 50, 0.97)",
   color: "#cdd6f4",
-  borderRight: "1px solid #313244",
+  border: "0.0625rem solid rgba(255,255,255,0.08)",
+  borderRadius: "clamp(0.55rem, 0.8vw, 0.75rem)",
+  boxShadow: "0 0.6rem 1.8rem rgba(0,0,0,0.28)",
+  backdropFilter: "blur(10px)",
   display: "flex",
   flexDirection: "column",
-  fontFamily:
-    '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
-  fontSize: 13,
-  zIndex: 199,
+  fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+  fontSize: "clamp(0.72rem, 0.75vw, 0.82rem)",
+  zIndex: 300,
   overflow: "hidden",
 };
 
 const headerStyle: React.CSSProperties = {
-  padding: "16px 20px",
-  borderBottom: "1px solid #313244",
-  fontSize: 15,
+  padding: "clamp(0.65rem, 1.1vw, 0.9rem) clamp(0.75rem, 1.15vw, 1rem)",
+  borderBottom: "0.0625rem solid rgba(255,255,255,0.08)",
+  fontSize: "clamp(0.85rem, 1vw, 1rem)",
   fontWeight: 600,
   letterSpacing: 0.3,
   cursor: "pointer",
@@ -59,10 +61,13 @@ const headerStyle: React.CSSProperties = {
 const bodyStyle: React.CSSProperties = {
   flex: 1,
   overflowY: "auto",
-  padding: "16px 20px",
+  scrollbarWidth: "none",
+  msOverflowStyle: "none",
+  padding: "clamp(0.65rem, 1vw, 0.9rem) clamp(0.75rem, 1.15vw, 1rem)",
   display: "flex",
   flexDirection: "column",
-  gap: 20,
+  gap: "clamp(0.45rem, 0.9vh, 0.7rem)",
+  minHeight: 0,
 };
 
 const sectionTitleStyle: React.CSSProperties = {
@@ -355,6 +360,7 @@ export function SolarPanelPropertiesPanel() {
         </div>
         <RoofPanelTabs />
         <div
+          className="floating-properties-scroll"
           style={{
             ...bodyStyle,
             alignItems: "center",
@@ -380,7 +386,7 @@ export function SolarPanelPropertiesPanel() {
   };
 
   return (
-    <div style={{ ...panelStyle, width: isCollapsed ? 50 : 280 }}>
+    <div style={{ ...panelStyle, width: isCollapsed ? "clamp(2.8rem, 3vw, 3.4rem)" : panelStyle.width }}>
       {/* Header */}
       <div style={headerStyle} onClick={closePanel}>
         <span style={{ display: isCollapsed ? "none" : "inline" }}>
@@ -401,7 +407,7 @@ export function SolarPanelPropertiesPanel() {
       {!isCollapsed && <RoofPanelTabs />}
 
       {}
-      <div style={{ ...bodyStyle, display: isCollapsed ? "none" : "flex" }}>
+      <div className="floating-properties-scroll" style={{ ...bodyStyle, display: isCollapsed ? "none" : "flex" }}>
         {}
         <div
           style={{

@@ -69,51 +69,60 @@ body,
   top: auto !important;
   right: auto !important;
 }
-/* Target Input */
+/* Shared responsive slider used by roof and chimney properties. */
 .generator-input {
   -webkit-appearance: none;
+  appearance: none;
   width: 100%;
+  height: clamp(0.45rem, 0.8vh, 0.7rem);
   background: transparent;
+  accent-color: #fab387;
   cursor: pointer;
 }
 
-/* --- Webkit Browsers --- */
 .generator-input::-webkit-slider-runnable-track {
-  height: 2px;
+  height: clamp(0.12rem, 0.22vh, 0.2rem);
   background: #fab387;
-  border-radius: 0px;
-  border: 0px solid #fab387;
-  box-shadow: 0px 2px 0px rgba(250, 179, 135, 0.1);
+  border-radius: 999px;
+  border: 0;
+  box-shadow: 0 0.08rem 0 rgba(250, 179, 135, 0.12);
 }
 
 .generator-input::-webkit-slider-thumb {
   -webkit-appearance: none;
-  height: 14px;
-  width: 14px;
+  height: clamp(0.7rem, 1.5vh, 0.95rem);
+  width: clamp(0.7rem, 1.5vh, 0.95rem);
   background: #fab387;
-  border-radius: 4px;
-  border: 0px solid #ffffff;
-  box-shadow: 0px 4px 0px rgba(0, 0, 0, 0.3);
-  margin-top: -6px;
+  border-radius: 50%;
+  border: 0;
+  box-shadow: 0 0.18rem 0 rgba(0, 0, 0, 0.25);
+  margin-top: clamp(-0.35rem, -0.7vh, -0.2rem);
 }
 
-/* --- Firefox --- */
 .generator-input::-moz-range-track {
-  height: 2px;
+  height: clamp(0.12rem, 0.22vh, 0.2rem);
   background: #fab387;
-  border-radius: 0px;
-  border: 0px solid #fab387;
-  box-shadow: 0px 2px 0px rgba(250, 179, 135, 0.1);
+  border-radius: 999px;
+  border: 0;
+  box-shadow: 0 0.08rem 0 rgba(250, 179, 135, 0.12);
 }
 
 .generator-input::-moz-range-thumb {
-  height: 14px;
-  width: 14px;
+  height: clamp(0.7rem, 1.5vh, 0.95rem);
+  width: clamp(0.7rem, 1.5vh, 0.95rem);
   background: #fab387;
-  border-radius: 4px;
-  border: 0px solid #ffffff;
-  box-shadow: 0px 4px 0px rgba(0, 0, 0, 0.3);
+  border-radius: 50%;
+  border: 0;
+  box-shadow: 0 0.18rem 0 rgba(0, 0, 0, 0.25);
 }
-.generator-input {
-display: none;
+
+
+/* Floating properties panels: keep scrolling usable without showing a scrollbar. */
+.floating-properties-scroll {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.floating-properties-scroll::-webkit-scrollbar {
+  display: none;
 }
