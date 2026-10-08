@@ -14,6 +14,7 @@ import {
   chimneysAtom,
   selectedChimneyIdAtom,
   getChimneyLocalPosition,
+  treeModelAtom,
   type Rectangle3D,
   type MergeConnection,
   type EndCapType,
@@ -64,6 +65,7 @@ export const InteractiveScene = ({
   const setLots = useSetAtom(lotsAtom);
   const setSelectedLotId = useSetAtom(selectedLotIdAtom);
   const lastTreeDimensions = useAtomValue(lastTreeDimensionsAtom);
+  const treeModel = useAtomValue(treeModelAtom);
   const metersPerUnit = useAtomValue(metersPerUnitAtom);
 
   const modeRef = useRef(mode);
@@ -398,6 +400,7 @@ export const InteractiveScene = ({
           radius: radiusUnits,
           height: heightUnits,
           color: "#2E7D32",
+          model: treeModel,
         };
 
         setTrees((prev) => [...prev, newTree]);
@@ -456,7 +459,7 @@ export const InteractiveScene = ({
         setSelectedLotId(null);
       }
     },
-    [setSelectedId, setTrees, setSelectedTreeId, setSelectedLotId, polygonPoints, finalizePolygonDraft, finishStandardDraw, setMode, setActiveTool],
+    [setSelectedId, setTrees, setSelectedTreeId, setSelectedLotId, polygonPoints, finalizePolygonDraft, finishStandardDraw, setMode, setActiveTool, treeModel],
   );
 
   const onGroundPointerMove = useCallback(

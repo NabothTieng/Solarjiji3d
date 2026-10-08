@@ -345,6 +345,7 @@ function MergedMesh({
       <mesh
         geometry={renderGeometry}
         castShadow
+        receiveShadow
         onPointerDown={onPointerDown}
         onPointerMove={onMove}
         onPointerUp={endRoofDrag}

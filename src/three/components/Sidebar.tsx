@@ -3,6 +3,7 @@ import { useCallback, useEffect, useState } from "react";
 import {
   interactionModeAtom,
   activeToolAtom,
+  treeModelAtom,
 } from "../store/rectangleStore";
 
 import { panelReportOpenAtom } from "../store/solarPanelStore";
@@ -16,6 +17,7 @@ import {
   Save,
   Sun,
   TreePine,
+  Flower2,
   Undo2,
 } from "lucide-react";
 import {
@@ -164,6 +166,9 @@ export default function Sidebar() {
   const setSelectedTreeId = useSetAtom(selectedTreeIdAtom);
   const setSelectedRoofSide = useSetAtom(selectedRoofSideAtom);
   const [showDrawPalette, setShowDrawPalette] = useState(false);
+  const [showTreePalette, setShowTreePalette] = useState(false);
+  const setTreeModel = useSetAtom(treeModelAtom);
+  const treeModel = useAtomValue(treeModelAtom);
   const canUndo = useAtomValue(canUndoAtom);
   const canRedo = useAtomValue(canRedoAtom);
   const undo = useSetAtom(undoAtom);
@@ -180,12 +185,14 @@ export default function Sidebar() {
         activeTool === "flat" ||
         activeTool === "hip" ||
         activeTool === "shed" ||
-        activeTool === "lot"));
+        activeTool === "lot" ||
+        activeTool === "tree"));
 
   const handleSelect = useCallback(() => {
     setMode("select");
     setActiveTool("select");
     setShowDrawPalette(false);
+    setShowTreePalette(false);
   }, [setMode, setActiveTool]);
 
   const handleDraw = useCallback(() => {
@@ -198,6 +205,7 @@ export default function Sidebar() {
     setActivePanel(null);
     setMode("select");
     setActiveTool("select");
+    setShowTreePalette(false);
     setShowDrawPalette(true);
   }, [
     setSelectedRectangleId,
@@ -213,6 +221,7 @@ export default function Sidebar() {
     setMode("draw");
     setActiveTool(tool);
     setShowDrawPalette(false);
+    setShowTreePalette(false);
   }, [setMode, setActiveTool]);
 
 
@@ -251,11 +260,17 @@ export default function Sidebar() {
     });
   }, [setShowDrawPalette, setMode, setActiveTool]);
 
-  const handleTreeMode = useCallback(() => {
-    setActiveTool("tree");
+  const handleTreeMenu = useCallback(() => {
+    setShowTreePalette((prev) => !prev);
+  }, []);
 
+  const handleTreeModel = useCallback((model: "pine" | "jacaranda") => {
+    setTreeModel(model);
+    setShowTreePalette(false);
+    setShowDrawPalette(false);
     setMode("draw");
-  }, [setMode, setActiveTool]);
+    setActiveTool("tree");
+  }, [setTreeModel, setMode, setActiveTool]);
 
   const handleLotMode = useCallback(() => {
     setActiveTool((prev) =>
@@ -361,13 +376,49 @@ export default function Sidebar() {
             <span style={btnLabelStyle}>Lot</span>
           </button>
           <button
-            title="Place Pine Tree"
-            style={activeTool === "tree" ? paletteBtnActive : paletteBtnBase}
-            onClick={() => handleDrawPaletteTool("tree")}
+            title="Choose Tree"
+            style={activeTool === "tree" || showTreePalette ? paletteBtnActive : paletteBtnBase}
+            onClick={handleTreeMenu}
           >
             <TreePine size={ICON_SIZE} strokeWidth={ICON_STROKE} />
             <span style={btnLabelStyle}>Tree</span>
           </button>
+
+          {showTreePalette && (
+            <div
+              role="menu"
+              aria-label="Tree types"
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                gap: "clamp(0.1rem, 0.2vh, 0.15rem)",
+                margin: "0.1rem 0 0.15rem",
+                padding: "clamp(0.2rem, 0.4vh, 0.3rem)",
+                background: "rgba(24, 24, 37, 0.92)",
+                border: "0.0625rem solid rgba(255,255,255,0.08)",
+                borderRadius: "0.35rem",
+              }}
+            >
+              <button
+                type="button"
+                title="Place Pine Tree"
+                style={activeTool === "tree" ? paletteBtnActive : paletteBtnBase}
+                onClick={() => handleTreeModel("pine")}
+              >
+                <TreePine size={ICON_SIZE} strokeWidth={ICON_STROKE} />
+                <span style={btnLabelStyle}>Pine</span>
+              </button>
+              <button
+                type="button"
+                title="Place Jacaranda Tree"
+                style={activeTool === "tree" && treeModel === "jacaranda" ? paletteBtnActive : paletteBtnBase}
+                onClick={() => handleTreeModel("jacaranda")}
+              >
+                <Flower2 size={ICON_SIZE} strokeWidth={ICON_STROKE} />
+                <span style={btnLabelStyle}>Jacaranda</span>
+              </button>
+            </div>
+          )}
           <button
             title="Draw Polygon"
             style={isPolygonTool ? paletteBtnActive : paletteBtnBase}

@@ -110,6 +110,7 @@ export interface Chimney3D {
   height: number;
 
   color: string;
+  model?: TreeModel;
 }
 
 export const chimneysAtom = atom<Chimney3D[]>([]);
@@ -176,6 +177,8 @@ export function getChimneyLocalPosition(
 }
 
 
+export type TreeModel = "pine" | "jacaranda";
+
 export interface Tree3D {
   id: string;
 
@@ -185,6 +188,7 @@ export interface Tree3D {
   height: number;
 
   color: string;
+  model?: TreeModel;
 }
 
 export const trees3DAtom = atom<Tree3D[]>([]);
@@ -205,3 +209,5 @@ export const lastTreeDimensionsAtom = atom<TreeDimensionsMeters>({
   canopyRadius: 1.5,
   height: 4,
 });
+
+export const treeModelAtom = atom<TreeModel>("pine");
