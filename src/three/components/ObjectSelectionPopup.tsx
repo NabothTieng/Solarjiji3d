@@ -1,6 +1,7 @@
 import { Box, Button, Span } from "@chakra-ui/react";
 import { Trash2 } from "lucide-react";
 import { useAtomValue, useSetAtom } from "jotai";
+import { useEffect, useRef, useState } from "react";
 import {
   rectanglesAtom,
   selectedRectangleAtom,
@@ -17,6 +18,25 @@ import { activePanelAtom } from "../../store/atoms";
 import { metersPerUnitAtom } from "../../store/atoms";
 
 export function ObjectSelectionPopup() {
+  const [isHovered, setIsHovered] = useState(false);
+  const [isFaded, setIsFaded] = useState(true);
+  const fadeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => () => {
+    if (fadeTimerRef.current) clearTimeout(fadeTimerRef.current);
+  }, []);
+
+  const handleMouseEnter = () => {
+    if (fadeTimerRef.current) clearTimeout(fadeTimerRef.current);
+    setIsHovered(true);
+    setIsFaded(false);
+  };
+
+  const handleMouseLeave = () => {
+    setIsHovered(false);
+    if (fadeTimerRef.current) clearTimeout(fadeTimerRef.current);
+    fadeTimerRef.current = setTimeout(() => setIsFaded(true), 2200);
+  };
   const selectedRect = useAtomValue(selectedRectangleAtom);
   const selectedTree = useAtomValue(selectedTreeAtom);
   const selectedChimney = useAtomValue(selectedChimneyAtom);
@@ -116,6 +136,10 @@ export function ObjectSelectionPopup() {
       zIndex={500}
       boxShadow="0 0.5rem 1.5rem rgba(0,0,0,0.28)"
       backdropFilter="blur(10px)"
+      opacity={isHovered || !isFaded ? 1 : 0.42}
+      transition="opacity 220ms ease, background 220ms ease"
+      onMouseEnter={handleMouseEnter}
+      onMouseLeave={handleMouseLeave}
     >
       <Box display="flex" justifyContent="space-between" alignItems="flex-start" mb="clamp(0.45rem, 0.8vh, 0.65rem)" gap="clamp(0.4rem, 0.8vw, 0.65rem)">
         <Box minW={0}>

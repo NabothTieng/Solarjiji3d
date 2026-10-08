@@ -12,31 +12,38 @@ import {
   buildDate,
 } from "../../utils/sunPosition";
 
+const UMBER = "#fab387";
+const PANEL_BG = "rgba(30, 30, 46, 0.96)";
+const TEXT = "#cdd6f4";
+const MUTED = "#a6adc8";
+const BORDER = "rgba(255,255,255,0.08)";
+
 const panelStyle: React.CSSProperties = {
   position: "absolute",
-  left: 72,
-  top: 0,
-  width: 300,
-  height: "100%",
-  background: "#1e1e2e",
-  color: "#cdd6f4",
-  borderRight: "1px solid #313244",
+  top: "clamp(0.5rem, 2vh, 1rem)",
+  left: "clamp(4.75rem, 6vw, 5.75rem)",
+  width: "clamp(15rem, 18vw, 20rem)",
+  maxWidth: "calc(100% - clamp(5.5rem, 7vw, 6.5rem))",
+  maxHeight: "calc(100% - clamp(1rem, 4vh, 2rem))",
+  background: PANEL_BG,
+  color: TEXT,
+  border: `0.0625rem solid ${BORDER}`,
+  borderRadius: "clamp(0.6rem, 0.9vw, 0.8rem)",
+  boxShadow: "0 0.7rem 1.8rem rgba(0,0,0,0.3)",
+  backdropFilter: "blur(10px)",
   display: "flex",
   flexDirection: "column",
-  fontFamily:
-    '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
-  fontSize: 13,
-  zIndex: 200,
+  fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+  fontSize: "clamp(0.62rem, 0.72vw, 0.74rem)",
+  zIndex: 400,
   overflow: "hidden",
-  transition: "left 0.2s ease",
 };
 
 const headerStyle: React.CSSProperties = {
-  padding: "16px 20px",
-  borderBottom: "1px solid #313244",
-  fontSize: 15,
-  fontWeight: 600,
-  letterSpacing: 0.3,
+  padding: "clamp(0.65rem, 1.1vh, 0.9rem) clamp(0.8rem, 1vw, 1rem)",
+  borderBottom: `0.0625rem solid ${BORDER}`,
+  fontSize: "clamp(0.78rem, 0.9vw, 0.95rem)",
+  fontWeight: 700,
   display: "flex",
   alignItems: "center",
   justifyContent: "space-between",
@@ -45,43 +52,50 @@ const headerStyle: React.CSSProperties = {
 };
 
 const bodyStyle: React.CSSProperties = {
-  flex: 1,
   overflowY: "auto",
-  padding: "16px 20px",
+  padding: "clamp(0.75rem, 1.1vw, 1rem)",
   display: "flex",
   flexDirection: "column",
-  gap: 16,
+  gap: "clamp(0.8rem, 1.5vh, 1rem)",
+  scrollbarWidth: "none",
+  msOverflowStyle: "none",
 };
 
-const rowStyle: React.CSSProperties = {
+const fieldLabelStyle: React.CSSProperties = {
   display: "flex",
-  alignItems: "center",
   justifyContent: "space-between",
-  gap: 10,
+  alignItems: "center",
+  color: MUTED,
+  fontSize: "clamp(0.56rem, 0.68vw, 0.68rem)",
+  fontWeight: 700,
+  textTransform: "uppercase",
+  letterSpacing: "0.05rem",
+  marginBottom: "clamp(0.3rem, 0.6vh, 0.45rem)",
 };
 
 const inputStyle: React.CSSProperties = {
-  flex: 1,
-  background: "#313244",
-  border: "1px solid #45475a",
-  borderRadius: 6,
-  color: "#cdd6f4",
-  padding: "4px 8px",
-  fontSize: 13,
+  width: "100%",
+  boxSizing: "border-box",
+  background: "rgba(49,50,68,0.82)",
+  border: "0.0625rem solid #45475a",
+  borderRadius: "clamp(0.3rem, 0.45vw, 0.4rem)",
+  color: TEXT,
+  padding: "clamp(0.38rem, 0.65vh, 0.5rem) clamp(0.45rem, 0.6vw, 0.6rem)",
+  fontSize: "clamp(0.62rem, 0.72vw, 0.74rem)",
   fontFamily: "inherit",
 };
 
 const sliderStyle: React.CSSProperties = {
-  flex: 1,
-  accentColor: "#89b4fa",
+  width: "100%",
 };
-
 
 const infoRowStyle: React.CSSProperties = {
   display: "flex",
   justifyContent: "space-between",
-  fontSize: 11,
-  color: "#a6adc8",
+  gap: "0.75rem",
+  fontSize: "clamp(0.58rem, 0.66vw, 0.68rem)",
+  color: MUTED,
+  padding: "clamp(0.2rem, 0.4vh, 0.3rem) 0",
 };
 
 const toDeg = (rad: number) => ((rad * 180) / Math.PI).toFixed(1);
@@ -90,7 +104,6 @@ export function LightControlPanel() {
   const [dateStr, setDateStr] = useAtom(sunDateAtom);
   const [timeStr, setTimeStr] = useAtom(sunTimeAtom);
   const activePanel = useAtomValue(activePanelAtom);
-
   const geo = useAtomValue(worldOriginGeoAtom);
 
   const sunInfo = useMemo(() => {
@@ -100,7 +113,6 @@ export function LightControlPanel() {
     return { sun, light };
   }, [dateStr, timeStr, geo.lat, geo.lng]);
 
-
   const timeMinutes = useMemo(() => {
     const [h, m] = timeStr.split(":").map(Number);
     return h * 60 + m;
@@ -109,81 +121,70 @@ export function LightControlPanel() {
   const setTimeFromMinutes = (mins: number) => {
     const h = Math.floor(mins / 60);
     const m = mins % 60;
-    setTimeStr(
-      `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`,
-    );
+    setTimeStr(`${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`);
   };
 
   if (activePanel !== "sun") return null;
 
   return (
-    <div style={panelStyle}>
-      <div style={headerStyle}>
-        <span>
-          {sunInfo.light.isDay ? "☀️" : "🌙"} Sun Position
-        </span>
+    <div style={panelStyle} className="floating-properties-scroll">
+      <div style={headerStyle} onClick={() => {}}>
+        <span>{sunInfo.light.isDay ? "☀️" : "🌙"} Sun Position</span>
+        <span style={{ color: UMBER, fontSize: "clamp(0.8rem, 1vw, 1rem)" }}>▼</span>
       </div>
-        <div style={bodyStyle}>
-          <div>
-            <div style={{ fontSize: 11, color: "#a6adc8", marginBottom: 4 }}>
-              Date
-            </div>
-            <input
-              type="date"
-              value={dateStr}
-              onChange={(e) => setDateStr(e.target.value)}
-              style={{ ...inputStyle, width: "100%" }}
-            />
-          </div>
 
-          <div>
-            <div style={{ fontSize: 11, color: "#a6adc8", marginBottom: 4 }}>
-              Time of Day
-            </div>
-            <div style={rowStyle}>
-              <input
-                type="time"
-                value={timeStr}
-                onChange={(e) => setTimeStr(e.target.value)}
-                style={{ ...inputStyle, flex: "none", width: 100 }}
-              />
-              <input
-                type="range"
-                min={0}
-                max={1439}
-                step={1}
-                value={timeMinutes}
-                onChange={(e) => setTimeFromMinutes(Number(e.target.value))}
-                style={sliderStyle}
-              />
-            </div>
-          </div>
+      <div style={bodyStyle} className="floating-properties-scroll">
+        <div>
+          <div style={fieldLabelStyle}>Date</div>
+          <input
+            type="date"
+            value={dateStr}
+            onChange={(e) => setDateStr(e.target.value)}
+            style={inputStyle}
+          />
+        </div>
 
-          <div
-            style={{
-              borderTop: "1px solid #313244",
-              paddingTop: 8,
-              display: "flex",
-              flexDirection: "column",
-              gap: 4,
-            }}
-          >
-            <div style={infoRowStyle}>
-              <span>Altitude</span>
-              <span>{toDeg(sunInfo.sun.altitude)}°</span>
-            </div>
-            <div style={infoRowStyle}>
-              <span>Azimuth</span>
-              <span>{toDeg(sunInfo.sun.azimuth)}°</span>
-            </div>
-            <div style={infoRowStyle}>
-              <span>Location</span>
-              <span>
-                {geo.lat.toFixed(4)}, {geo.lng.toFixed(4)}
-              </span>
-            </div>
+        <div>
+          <div style={fieldLabelStyle}>
+            <span>Time of Day</span>
+            <span style={{ color: UMBER }}>{timeStr}</span>
+          </div>
+          <input
+            className="generator-input"
+            type="range"
+            min={0}
+            max={1439}
+            step={1}
+            value={timeMinutes}
+            onChange={(e) => setTimeFromMinutes(Number(e.target.value))}
+            style={sliderStyle}
+            aria-label="Time of day"
+          />
+        </div>
+
+        <div
+          style={{
+            borderTop: `0.0625rem solid ${BORDER}`,
+            paddingTop: "clamp(0.45rem, 0.8vh, 0.65rem)",
+          }}
+        >
+          <div style={fieldLabelStyle}>Sun Data</div>
+          <div style={infoRowStyle}>
+            <span>Altitude</span>
+            <span style={{ color: UMBER, fontWeight: 700 }}>{toDeg(sunInfo.sun.altitude)}°</span>
+          </div>
+          <div style={infoRowStyle}>
+            <span>Azimuth</span>
+            <span style={{ color: UMBER, fontWeight: 700 }}>{toDeg(sunInfo.sun.azimuth)}°</span>
+          </div>
+          <div style={infoRowStyle}>
+            <span>Location</span>
+            <span style={{ color: TEXT, fontWeight: 600 }}>
+              {geo.lat.toFixed(4)}, {geo.lng.toFixed(4)}
+            </span>
           </div>
         </div>
+      </div>
     </div>
   );
 }

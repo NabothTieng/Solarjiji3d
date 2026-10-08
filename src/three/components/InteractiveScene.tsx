@@ -5,6 +5,7 @@ import { DoubleSide, Vector3 } from "three";
 import {
   rectanglesAtom,
   selectedRectangleIdAtom,
+  selectedTreeIdAtom,
   interactionModeAtom,
   isDraggingHandleAtom,
   activeToolAtom,
@@ -57,6 +58,7 @@ export const InteractiveScene = ({
   const activeTool = useAtomValue(activeToolAtom);
   const setSolarPanelConfigs = useSetAtom(solarPanelConfigsAtom);
   const setTrees = useSetAtom(trees3DAtom);
+  const setSelectedTreeId = useSetAtom(selectedTreeIdAtom);
   const setChimneys = useSetAtom(chimneysAtom);
   const setSelectedChimneyId = useSetAtom(selectedChimneyIdAtom);
   const setLots = useSetAtom(lotsAtom);
@@ -389,16 +391,23 @@ export const InteractiveScene = ({
         const mpu = metersPerUnitRef.current || 1;
         const radiusUnits = dims.canopyRadius / mpu;
         const heightUnits = dims.height / mpu;
-        setTrees((prev) => [
-          ...prev,
-          {
-            id: generateId(),
-            position: [point.x, 0, point.z] as [number, number, number],
-            radius: radiusUnits,
-            height: heightUnits,
-            color: "#2E7D32",
-          },
-        ]);
+        const treeId = generateId();
+        const newTree = {
+          id: treeId,
+          position: [point.x, 0, point.z] as [number, number, number],
+          radius: radiusUnits,
+          height: heightUnits,
+          color: "#2E7D32",
+        };
+
+        setTrees((prev) => [...prev, newTree]);
+        // A completed placement behaves like the other draw tools: select
+        // the new object and return to Select so its properties can be edited.
+        setSelectedTreeId(treeId);
+        setSelectedId(null);
+        setSelectedLotId(null);
+        setMode("select");
+        setActiveTool("select");
         return;
       }
 
@@ -447,7 +456,7 @@ export const InteractiveScene = ({
         setSelectedLotId(null);
       }
     },
-    [setSelectedId, setTrees, setSelectedLotId, polygonPoints, finalizePolygonDraft, finishStandardDraw, setMode, setActiveTool],
+    [setSelectedId, setTrees, setSelectedTreeId, setSelectedLotId, polygonPoints, finalizePolygonDraft, finishStandardDraw, setMode, setActiveTool],
   );
 
   const onGroundPointerMove = useCallback(

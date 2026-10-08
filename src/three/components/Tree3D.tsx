@@ -43,7 +43,9 @@ function useTreeDragHandlers(tree: Tree3D) {
   const onPointerDown = (e: ThreeEvent<PointerEvent>) => {
 
 
-    if (mode === "draw" && activeTool !== "tree") return;
+    // While drawing, clicks are placement clicks. Never select an existing
+    // tree underneath the cursor; the ground handler owns the draw workflow.
+    if (mode === "draw") return;
 
     e.stopPropagation();
     setSelectedTreeId(tree.id);
