@@ -15,6 +15,7 @@ import {
   type Tree3D,
 } from "../store/rectangleStore";
 import { selectedLotIdAtom } from "../store/lotStore";
+import { activePanelAtom } from "../../store/atoms";
 
 
 function rayToGround(e: ThreeEvent<PointerEvent>): { x: number; z: number } | null {
@@ -35,6 +36,7 @@ function useTreeDragHandlers(tree: Tree3D) {
   const setSelectedRectangleId = useSetAtom(selectedRectangleIdAtom);
   const setSelectedChimneyId = useSetAtom(selectedChimneyIdAtom);
   const setSelectedLotId = useSetAtom(selectedLotIdAtom);
+  const setActivePanel = useSetAtom(activePanelAtom);
   const setIsDraggingHandle = useSetAtom(isDraggingHandleAtom);
   const mode = useAtomValue(interactionModeAtom);
 
@@ -50,6 +52,7 @@ function useTreeDragHandlers(tree: Tree3D) {
 
     e.stopPropagation();
     setSelectedTreeId(tree.id);
+    setActivePanel("tree");
 
     setSelectedRectangleId(null);
     setSelectedChimneyId(null);

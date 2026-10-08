@@ -1,3 +1,4 @@
+import { activePanelAtom } from "../../store/atoms";
 import { useMemo, useState, useCallback } from "react";
 import * as THREE from "three";
 import type { ThreeEvent } from "@react-three/fiber";
@@ -9,6 +10,7 @@ import {
   interactionModeAtom,
   selectedChimneyIdAtom,
   selectedRectangleIdAtom,
+  selectedTreeIdAtom,
   type Rectangle3D,
 } from "../store/rectangleStore";
 import { computeRoofSides } from "../helpers/roofSides";
@@ -57,6 +59,8 @@ function MergedMesh({
   const selectedRectangleId = useAtomValue(selectedRectangleIdAtom);
   const setEditorData = useSetAtom(roofPanelEditorAtom);
   const setSelectedRectangleId = useSetAtom(selectedRectangleIdAtom);
+  const setSelectedTreeId = useSetAtom(selectedTreeIdAtom);
+  const setActivePanel = useSetAtom(activePanelAtom);
   const setSelectedLotId = useSetAtom(selectedLotIdAtom);
   const setChimneys = useSetAtom(chimneysAtom);
   const setSelectedChimneyId = useSetAtom(selectedChimneyIdAtom);
@@ -273,6 +277,8 @@ function MergedMesh({
       }
 
       setSelectedRectangleId(hitRect.id);
+      setSelectedTreeId(null);
+      setActivePanel("roof");
       setSelectedLotId(null);
       setSelectedChimneyId(null);
       if (e.faceIndex != null) {
@@ -305,6 +311,8 @@ function MergedMesh({
       setSelectedChimneyId,
       setSelectedLotId,
       setSelectedRectangleId,
+      setSelectedTreeId,
+      setActivePanel,
       setSelectedRoofSide,
       consumeRoofDragClick,
     ],

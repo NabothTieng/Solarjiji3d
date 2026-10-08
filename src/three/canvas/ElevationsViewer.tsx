@@ -1,11 +1,10 @@
 import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Canvas, useThree } from "@react-three/fiber";
-import { OrthographicCamera } from "@react-three/drei";
+import { Html, OrbitControls, OrthographicCamera } from "@react-three/drei";
 import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import * as THREE from "three";
 import { fullscreenViewAtom } from "../../store/atoms";
 import { rectanglesAtom } from "../store/rectangleStore";
-import { Trees3D } from "../components/Tree3D";
 import type { Rectangle3D } from "../store/rectangleStore";
 import { BuildingRenderer } from "./components/BuildingRenderer";
 import { SceneLighting } from "./components/SceneLighting";
@@ -18,7 +17,7 @@ import {
   getRectRotation,
 } from "../store/rectangleStore";
 
-type Direction = "South" | "West" | "North" | "East";
+type Direction = "South" | "West" | "North" | "East" | "Top";
 
 const DIRECTION_PAIRS = [
   {
@@ -49,8 +48,15 @@ function CameraController({
   zoom: number;
 }) {
   const { camera } = useThree();
+  const controlsRef = useRef<any>(null);
+  const initializedDirection = useRef<Direction | null>(null);
 
   useEffect(() => {
+    // Only establish the automatic framing on first load or when the user
+    // changes elevation direction. Dragging a height/pitch handle must not
+    // reset a user's pan/zoom position.
+    if (initializedDirection.current === direction) return;
+
     const dist = 50;
     let pos: [number, number, number];
     switch (direction) {
@@ -66,17 +72,40 @@ function CameraController({
       case "West":
         pos = [center[0] - dist, center[1], center[2]];
         break;
+      case "Top":
+        pos = [center[0], center[1] + dist, center[2]];
+        break;
     }
+
     camera.position.set(pos[0], pos[1], pos[2]);
     camera.up.set(0, 1, 0);
+    if (direction === "Top") camera.up.set(0, 0, -1);
     camera.lookAt(center[0], center[1], center[2]);
-    if (camera instanceof THREE.OrthographicCamera) {
-      camera.zoom = zoom;
-    }
+    if (camera instanceof THREE.OrthographicCamera) camera.zoom = zoom;
     camera.updateProjectionMatrix();
+
+    if (controlsRef.current) {
+      controlsRef.current.target.set(center[0], center[1], center[2]);
+      controlsRef.current.update();
+    }
+
+    initializedDirection.current = direction;
   }, [camera, center, direction, zoom]);
 
-  return null;
+  return (
+    <OrbitControls
+      ref={controlsRef}
+      enableRotate={false}
+      enablePan
+      enableZoom
+      screenSpacePanning
+      minZoom={5}
+      maxZoom={80}
+      panSpeed={0.9}
+      zoomSpeed={0.9}
+      mouseButtons={{ LEFT: undefined, MIDDLE: THREE.MOUSE.PAN, RIGHT: THREE.MOUSE.PAN }}
+    />
+  );
 }
 
 // ---------------------------------------------------------------------------
@@ -93,6 +122,13 @@ function ElevationHandles({
   const setRectangles = useSetAtom(rectanglesAtom);
   const [selectedId, setSelectedId] = useAtom(selectedRectangleIdAtom);
   const { camera, gl, size } = useThree();
+
+  // Keep the interactive targets comfortably clickable at any viewport size/zoom.
+  const worldPerPixel =
+    camera instanceof THREE.OrthographicCamera
+      ? (camera.top - camera.bottom) / Math.max(camera.zoom * size.height, 1)
+      : 0.01;
+  const handleSize = THREE.MathUtils.clamp(worldPerPixel * 34, 0.24, 0.62);
   const dragging = useRef<{
     rectId: string;
     type: "height" | "pitch";
@@ -245,7 +281,7 @@ function ElevationHandles({
 
   return (
     <group>
-      {handles.map(({ rect, wallHandlePos, pitchHandlePos, wallHeight: wh }) => {
+      {direction !== "Top" && handles.map(({ rect, wallHandlePos, pitchHandlePos, wallHeight: wh }) => {
         const isSelected = rect.id === selectedId;
         const pitchSlope = rect.pitchAngle ?? PITCH_SLOPE;
         return (
@@ -261,7 +297,7 @@ function ElevationHandles({
                 if (!dragging.current) gl.domElement.style.cursor = "";
               }}
             >
-              <boxGeometry args={[0.22, 0.08, 0.22]} />
+              <boxGeometry args={[handleSize, Math.max(handleSize * 0.36, 0.08), handleSize]} />
               <meshStandardMaterial
                 color={isSelected ? "#42a5f5" : "#90caf9"}
                 emissive={isSelected ? "#1565c0" : "#1e88e5"}
@@ -284,7 +320,7 @@ function ElevationHandles({
                   if (!dragging.current) gl.domElement.style.cursor = "";
                 }}
               >
-                <boxGeometry args={[0.16, 0.16, 0.16]} />
+                <boxGeometry args={[handleSize * 0.9, handleSize * 0.9, handleSize * 0.9]} />
                 <meshStandardMaterial
                   color={isSelected ? "#ff7043" : "#ffab91"}
                   emissive={isSelected ? "#d84315" : "#e64a19"}
@@ -301,6 +337,7 @@ function ElevationHandles({
                 wallHeight={wh}
                 pitchAngle={pitchSlope}
                 roofType={rect.roofType}
+                direction={direction}
               />
             )}
           </group>
@@ -320,121 +357,74 @@ function DimensionLabels({
   wallHeight,
   pitchAngle,
   roofType,
+  direction,
 }: {
   wallHandlePos: [number, number, number];
   pitchHandlePos: [number, number, number];
   wallHeight: number;
   pitchAngle: number;
   roofType: string;
+  direction: Direction;
 }) {
-  // Vertical dashed line from ground to wall handle
-  const wallLinePoints = useMemo(
-    () => [
-      new THREE.Vector3(wallHandlePos[0], 0, wallHandlePos[2]),
-      new THREE.Vector3(...wallHandlePos),
-    ],
-    [wallHandlePos],
-  );
+  const wallLabelOffset = useMemo<[number, number, number]>(() => {
+    // Keep H inside the elevation frame instead of letting it sit on the
+    // building edge where the 2D roof render can clip it.
+    switch (direction) {
+      case "South": return [-0.75, 0, 0];
+      case "North": return [0.75, 0, 0];
+      case "East": return [0, 0, 0.75];
+      case "West": return [0, 0, -0.75];
+      default: return [0, 0, 0];
+    }
+  }, [direction]);
+
+  const pitchLabelOffset = useMemo<[number, number, number]>(() => {
+    switch (direction) {
+      case "South": return [0, 0.45, 0.08];
+      case "North": return [0, 0.45, -0.08];
+      case "East": return [0.08, 0.45, 0];
+      case "West": return [-0.08, 0.45, 0];
+      default: return [0, 0.45, 0];
+    }
+  }, [direction]);
+
+  const labelStyle = {
+    whiteSpace: "nowrap" as const,
+    fontSize: "clamp(0.65rem, 1.05vw, 0.95rem)",
+    lineHeight: 1,
+    fontWeight: 800,
+    padding: "clamp(0.25rem, 0.55vh, 0.4rem) clamp(0.5rem, 0.8vw, 0.75rem)",
+    borderRadius: "0.45rem",
+    color: "#fff",
+    background: "rgba(43,33,29,0.94)",
+    boxSizing: "border-box" as const,
+    pointerEvents: "none" as const,
+    textAlign: "center" as const,
+  };
 
   return (
-    <group>
-      {/* Wall height dimension line */}
-      <line>
-        <bufferGeometry>
-          <bufferAttribute
-            attach="attributes-position"
-            args={[
-              new Float32Array([
-                wallLinePoints[0].x,
-                wallLinePoints[0].y,
-                wallLinePoints[0].z,
-                wallLinePoints[1].x,
-                wallLinePoints[1].y,
-                wallLinePoints[1].z,
-              ]),
-              3,
-            ]}
-            count={2}
-            itemSize={3}
-          />
-        </bufferGeometry>
-        <lineBasicMaterial color="#42a5f5" linewidth={1} />
-      </line>
-
-      {/* Wall height label */}
-      <sprite
-        position={[
-          wallHandlePos[0],
-          wallHeight / 2,
-          wallHandlePos[2],
-        ]}
-        scale={[0.8, 0.25, 1]}
+    <>
+      <Html
+        position={[wallHandlePos[0] + wallLabelOffset[0], wallHandlePos[1] / 2, wallHandlePos[2] + wallLabelOffset[2]]}
+        center
+        zIndexRange={[1000, 0]}
+        style={{ ...labelStyle, border: "clamp(2px, 0.18vw, 3px) solid #42a5f5" }}
       >
-        <spriteMaterial>
-          <canvasTexture
-            attach="map"
-            image={createLabelCanvas(
-              `H: ${wallHeight.toFixed(2)}`,
-              "#42a5f5",
-            )}
-          />
-        </spriteMaterial>
-      </sprite>
+        H: {wallHeight.toFixed(2)}
+      </Html>
 
-      {/* Pitch label */}
       {roofType !== "flat" && (
-        <sprite
-          position={[
-            pitchHandlePos[0],
-            pitchHandlePos[1] + 0.2,
-            pitchHandlePos[2],
-          ]}
-          scale={[0.8, 0.25, 1]}
+        <Html
+          position={[pitchHandlePos[0] + pitchLabelOffset[0], pitchHandlePos[1] + pitchLabelOffset[1], pitchHandlePos[2] + pitchLabelOffset[2]]}
+          center
+          zIndexRange={[1000, 0]}
+          style={{ ...labelStyle, border: "clamp(2px, 0.18vw, 3px) solid #ff7043" }}
         >
-          <spriteMaterial>
-            <canvasTexture
-              attach="map"
-              image={createLabelCanvas(
-                `P: ${pitchAngle.toFixed(2)}`,
-                "#ff7043",
-              )}
-            />
-          </spriteMaterial>
-        </sprite>
+          P: {pitchAngle.toFixed(2)}
+        </Html>
       )}
-    </group>
+    </>
   );
-}
-
-// ---------------------------------------------------------------------------
-// Utility: render text to a canvas for use as a sprite texture
-// ---------------------------------------------------------------------------
-
-const labelCanvasCache = new Map<string, HTMLCanvasElement>();
-
-function createLabelCanvas(text: string, color: string): HTMLCanvasElement {
-  const key = `${text}:${color}`;
-  const cached = labelCanvasCache.get(key);
-  if (cached) return cached;
-
-  const canvas = document.createElement("canvas");
-  canvas.width = 256;
-  canvas.height = 64;
-  const ctx = canvas.getContext("2d")!;
-  ctx.clearRect(0, 0, 256, 64);
-  ctx.fillStyle = "rgba(255,255,255,0.85)";
-  ctx.roundRect(2, 2, 252, 60, 8);
-  ctx.fill();
-  ctx.fillStyle = color;
-  ctx.font = "bold 32px sans-serif";
-  ctx.textAlign = "center";
-  ctx.textBaseline = "middle";
-  ctx.fillText(text, 128, 34);
-
-  // Limit cache size to prevent unbounded growth during drags
-  if (labelCanvasCache.size > 200) labelCanvasCache.clear();
-  labelCanvasCache.set(key, canvas);
-  return canvas;
 }
 
 // ---------------------------------------------------------------------------
@@ -491,7 +481,7 @@ function ElevationView({
     <Canvas
       gl={{ antialias: true, alpha: true }}
       dpr={[1, 2]}
-      style={{ width: "100%", height: "100%", background: "#f5f5f5" }}
+      style={{ width: "100%", height: "100%", background: "#ece9e6" }}
     >
       <Suspense fallback={null}>
         <OrthographicCamera
@@ -506,10 +496,7 @@ function ElevationView({
         />
         <ambientLight intensity={0.6} />
         <SceneLighting castShadow={false} />
-        <group>
-          <BuildingRenderer rectangles={rectangles} />
-          <Trees3D />
-        </group>
+        <BuildingRenderer rectangles={rectangles} />
         <ElevationHandles rectangles={rectangles} direction={direction} />
       </Suspense>
     </Canvas>
@@ -527,60 +514,57 @@ function DirectionTabs({
   activeTab: Direction;
   onTabChange: (dir: Direction) => void;
 }) {
+  const options: Array<{ label: string; direction: Direction }> = [
+    { label: "South", direction: "South" },
+    { label: "North", direction: "North" },
+    { label: "West", direction: "West" },
+    { label: "East", direction: "East" },
+    { label: "Top", direction: "Top" },
+  ];
+
   return (
     <div
       style={{
-        display: "flex",
-        gap: 6,
-        padding: "6px 8px",
-        borderTop: "1px solid #e0e0e0",
+        display: "grid",
+        gridTemplateColumns: "repeat(5, minmax(0, 1fr))",
+        gap: "clamp(0.35rem, 1vw, 0.75rem)",
+        padding: "clamp(0.5rem, 1.2vh, 0.8rem) clamp(0.6rem, 1.4vw, 1rem)",
+        borderTop: "1px solid rgba(0,0,0,0.14)",
+        background: "rgba(255,255,255,0.96)",
         flexShrink: 0,
-        justifyContent: "center",
       }}
     >
-      {DIRECTION_PAIRS.map((pair) => (
-        <div
-          key={pair.label1}
-          style={{
-            display: "flex",
-            borderRadius: 6,
-            overflow: "hidden",
-            border: "1px solid #e0e0e0",
-          }}
-        >
+      {options.map(({ label, direction }) => {
+        const active = activeTab === direction;
+        return (
           <button
-            onClick={() => onTabChange(pair.dir1)}
+            key={direction}
+            onClick={() => onTabChange(direction)}
+            aria-pressed={active}
             style={{
-              padding: "5px 12px",
-              border: "none",
-              background: activeTab === pair.dir1 ? "#f57c00" : "#fff",
-              color: activeTab === pair.dir1 ? "#fff" : "#666",
-              fontSize: 11,
-              fontWeight: activeTab === pair.dir1 ? 700 : 500,
+              minWidth: 0,
+              minHeight: "clamp(2.5rem, 6vh, 3.5rem)",
+              padding: "clamp(0.45rem, 1vh, 0.7rem) clamp(0.45rem, 1vw, 0.9rem)",
+              border: active ? "2px solid #f57c00" : "1px solid rgba(0,0,0,0.2)",
+              borderRadius: "clamp(0.45rem, 0.8vw, 0.7rem)",
+              background: active ? "#f57c00" : "#2b211d",
+              color: "#fff",
+              fontSize: "clamp(0.78rem, 1.1vw, 1rem)",
+              fontWeight: active ? 800 : 650,
+              lineHeight: 1,
+              whiteSpace: "nowrap",
+              overflow: "hidden",
+              textOverflow: "clip",
               cursor: "pointer",
-              transition: "all 0.15s",
+              boxShadow: active ? "0 0.15rem 0 rgba(0,0,0,0.16)" : "none",
+              transition: "all 0.15s ease",
+              touchAction: "manipulation",
             }}
           >
-            {pair.label1}
+            {label}
           </button>
-          <button
-            onClick={() => onTabChange(pair.dir2)}
-            style={{
-              padding: "5px 12px",
-              border: "none",
-              borderLeft: "1px solid #e0e0e0",
-              background: activeTab === pair.dir2 ? "#f57c00" : "#fff",
-              color: activeTab === pair.dir2 ? "#fff" : "#666",
-              fontSize: 11,
-              fontWeight: activeTab === pair.dir2 ? 700 : 500,
-              cursor: "pointer",
-              transition: "all 0.15s",
-            }}
-          >
-            {pair.label2}
-          </button>
-        </div>
-      ))}
+        );
+      })}
     </div>
   );
 }
@@ -611,9 +595,10 @@ const ElevationsViewer = () => {
       {maxHeight > 0 && (
         <div
           style={{
-            padding: "4px 10px",
-            fontSize: 12,
-            color: "#555",
+            padding: "clamp(0.35rem, 0.8vh, 0.55rem) clamp(0.65rem, 1.2vw, 0.95rem)",
+            fontSize: "clamp(0.72rem, 1vw, 0.9rem)",
+            fontWeight: 650,
+            color: "#3a2d27",
             display: "flex",
             alignItems: "center",
             gap: 6,
@@ -637,7 +622,7 @@ const ElevationsViewer = () => {
           width: "100%",
           flex: 1,
           minHeight: 0,
-          background: "#f5f5f5",
+          background: "#ece9e6",
         }}
       >
         <ElevationView direction={activeTab} rectangles={rectangles} />

@@ -1,3 +1,4 @@
+import { activePanelAtom } from "../../store/atoms";
 import { useMemo, useState, useCallback } from "react";
 import * as THREE from "three";
 import type { ThreeEvent } from "@react-three/fiber";
@@ -9,6 +10,7 @@ import {
   interactionModeAtom,
   selectedChimneyIdAtom,
   selectedRectangleIdAtom,
+  selectedTreeIdAtom,
   type Rectangle3D,
 } from "../store/rectangleStore";
 import { computeRoofSides } from "../helpers/roofSides";
@@ -54,6 +56,8 @@ export const Building3D = ({ rect, allRects, enableRoofDrag = false }: Building3
   const selectedRectangleId = useAtomValue(selectedRectangleIdAtom);
   const setEditorData = useSetAtom(roofPanelEditorAtom);
   const setSelectedRectangleId = useSetAtom(selectedRectangleIdAtom);
+  const setSelectedTreeId = useSetAtom(selectedTreeIdAtom);
+  const setActivePanel = useSetAtom(activePanelAtom);
   const setSelectedLotId = useSetAtom(selectedLotIdAtom);
   const setChimneys = useSetAtom(chimneysAtom);
   const setSelectedChimneyId = useSetAtom(selectedChimneyIdAtom);
@@ -214,6 +218,8 @@ export const Building3D = ({ rect, allRects, enableRoofDrag = false }: Building3
       }
 
       setSelectedRectangleId(rect.id);
+      setSelectedTreeId(null);
+      setActivePanel("roof");
       setSelectedLotId(null);
       setSelectedChimneyId(null);
       if (e.faceIndex != null) {
@@ -245,6 +251,8 @@ export const Building3D = ({ rect, allRects, enableRoofDrag = false }: Building3
       setSelectedChimneyId,
       setSelectedLotId,
       setSelectedRectangleId,
+      setSelectedTreeId,
+      setActivePanel,
       setSelectedRoofSide,
       consumeRoofDragClick,
     ],
@@ -257,6 +265,8 @@ export const Building3D = ({ rect, allRects, enableRoofDrag = false }: Building3
 
       e.stopPropagation();
       setSelectedRectangleId(rect.id);
+      setSelectedTreeId(null);
+      setActivePanel("roof");
       setSelectedLotId(null);
       setSelectedChimneyId(null);
       setSelectedRoofSide(null);
@@ -268,6 +278,8 @@ export const Building3D = ({ rect, allRects, enableRoofDrag = false }: Building3
       setSelectedChimneyId,
       setSelectedLotId,
       setSelectedRectangleId,
+      setSelectedTreeId,
+      setActivePanel,
       setSelectedRoofSide,
     ],
   );

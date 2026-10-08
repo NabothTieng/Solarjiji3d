@@ -19,7 +19,7 @@ import {
   type MergeConnection,
   type EndCapType,
 } from "../store/rectangleStore";
-import { metersPerUnitAtom } from "../../store/atoms";
+import { activePanelAtom, metersPerUnitAtom } from "../../store/atoms";
 import { solarPanelConfigsAtom } from "../store/solarPanelStore";
 import { lotsAtom, selectedLotIdAtom, type Lot3D } from "../store/lotStore";
 import { DEFAULT_LOT_COLOR } from "./Lot3D";
@@ -67,6 +67,7 @@ export const InteractiveScene = ({
   const lastTreeDimensions = useAtomValue(lastTreeDimensionsAtom);
   const treeModel = useAtomValue(treeModelAtom);
   const metersPerUnit = useAtomValue(metersPerUnitAtom);
+  const setActivePanel = useSetAtom(activePanelAtom);
 
   const modeRef = useRef(mode);
   const rectanglesRef = useRef(rectangles);
@@ -408,7 +409,9 @@ export const InteractiveScene = ({
         // the new object and return to Select so its properties can be edited.
         setSelectedTreeId(treeId);
         setSelectedId(null);
+        setSelectedChimneyId(null);
         setSelectedLotId(null);
+        setActivePanel("tree");
         setMode("select");
         setActiveTool("select");
         return;
@@ -459,7 +462,7 @@ export const InteractiveScene = ({
         setSelectedLotId(null);
       }
     },
-    [setSelectedId, setTrees, setSelectedTreeId, setSelectedLotId, polygonPoints, finalizePolygonDraft, finishStandardDraw, setMode, setActiveTool, treeModel],
+    [setSelectedId, setTrees, setSelectedTreeId, setSelectedChimneyId, setSelectedLotId, setActivePanel, polygonPoints, finalizePolygonDraft, finishStandardDraw, setMode, setActiveTool, treeModel],
   );
 
   const onGroundPointerMove = useCallback(
