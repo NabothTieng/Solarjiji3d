@@ -330,6 +330,7 @@ export const Building3D = ({ rect, allRects, enableRoofDrag = false }: Building3
       <mesh
         geometry={roofRenderGeometry}
         castShadow
+        receiveShadow
         onPointerDown={onRoofPointerDown}
         onPointerMove={onRoofMove}
         onPointerUp={endRoofDrag}

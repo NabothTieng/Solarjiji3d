@@ -140,7 +140,7 @@ const Viewer3D = () => {
         style={{ width: "100%", flex: 1, minHeight: 0, background: "#ffffff" }}
       >
         <Canvas
-          shadows
+          shadows={{ type: THREE.PCFSoftShadowMap }}
           camera={{
             position: cameraPosition,
             fov: 50,
@@ -153,6 +153,28 @@ const Viewer3D = () => {
           }}
           dpr={[1, 2]}
           style={{ width: "100%", height: "100%" }}
+          onCreated={({ gl, scene, camera }) => {
+            console.group("[SolarJiji 3D Debug] Canvas created");
+            console.log("renderer", {
+              renderer: gl.info.render,
+              memory: gl.info.memory,
+              capabilities: gl.capabilities,
+              outputColorSpace: gl.outputColorSpace,
+              toneMapping: gl.toneMapping,
+            });
+            console.log("scene", scene);
+            console.log("camera", camera);
+            console.log("camera position", camera.position.toArray());
+            console.groupEnd();
+
+            const canvas = gl.domElement;
+            canvas.addEventListener("webglcontextlost", (event) => {
+              console.error("[SolarJiji 3D Debug] WEBGL CONTEXT LOST", event);
+            });
+            canvas.addEventListener("webglcontextrestored", () => {
+              console.warn("[SolarJiji 3D Debug] WEBGL CONTEXT RESTORED");
+            });
+          }}
         >
           <Suspense fallback={null}>
             <ambientLight intensity={0.5} />
